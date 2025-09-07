@@ -1,0 +1,62 @@
+{
+  "name": "EnaChatBot",
+  "description": "A Telegram bot maintained under the @TeamXUpdate Community 🤖",
+  "logo": "https://files.catbox.moe/m2kbru.jpg",
+  "keywords": [
+    "Chatbot",
+    "mongodb",
+    "python",
+    "pyrogram"
+  ],
+  "buildpacks": [{
+    "url": "heroku/python"
+  }],
+  "repository": "https://github.com/strad-dev131/ChatBot",
+  "env": {
+    "API_ID": {
+      "description": "Get this value from https://my.telegram.org (API Development Tools)",
+      "required": true,
+      "value": ""
+    },
+    "API_HASH": {
+      "description": "Get this value from https://my.telegram.org (API Development Tools)",
+      "required": true,
+      "value": ""
+    },
+    "BOT_TOKEN": {
+      "description": "A Bot token from @BotFather",
+      "required": true,
+      "value": ""
+    },
+    "STRING_SESSION": {
+      "description": "Fill Here A Pyrogram String Session For Id-Chatbot, Get it from: https://telegram.tools/session-string-generator#pyrogram,user (Optional, skip if you don't want id-chatbot)",
+      "required": false,
+      "value": ""
+    },
+    "MONGO_URL": {
+      "description": "Get a MongoDB connection string from https://cloud.mongodb.com",
+      "required": true,
+      "value": ""
+    },
+    "OWNER_ID": {
+      "description": "Fill Here Your Owner User Id (numeric)",
+      "required": true,
+      "value": ""
+    },
+    "OWNER_USERNAME": {
+      "description": "Fill Here Your Telegram Username (without @)",
+      "required": true,
+      "value": ""
+    },
+    "SUPPORT_GRP": {
+      "description": "Your Telegram Support Group username (without @)",
+      "required": false,
+      "value": "TeamsXchat"
+    },
+    "UPDATE_CHNL": {
+      "description": "Your Telegram Updates Channel username (without @)",
+      "required": false,
+      "value": "TeamXUpdate"
+    }
+  }
+}
