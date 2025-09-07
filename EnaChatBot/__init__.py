@@ -1,13 +1,20 @@
 import logging
 import time
 from pymongo import MongoClient
-from Abg import patch
-from EnaChatBot.userbot.userbot import Userbot
 from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 import config
 import uvloop
+
+# Try to import Abg, if not available create patch function
+try:
+    from Abg import patch
+except ImportError:
+    def patch(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 ID_CHATBOT = None
 CLONE_OWNERS = {}
@@ -40,14 +47,16 @@ def dbb():
 
 cloneownerdb = db.clone_owners
 
-
-# ---------------- CLONE OWNER FUNCTIONS ---------------- #
+# -------------- CLONE OWNER FUNCTIONS -------------- #
 
 async def load_clone_owners():
-    async for entry in cloneownerdb.find():
-        bot_id = entry["bot_id"]
-        user_id = entry["user_id"]
-        CLONE_OWNERS[bot_id] = user_id
+    try:
+        async for entry in cloneownerdb.find():
+            bot_id = entry["bot_id"]
+            user_id = entry["user_id"]
+            CLONE_OWNERS[bot_id] = user_id
+    except:
+        pass
 
 async def save_clonebot_owner(bot_id, user_id):
     await cloneownerdb.update_one(
@@ -69,7 +78,7 @@ async def delete_clone_owner(bot_id):
 async def save_idclonebot_owner(clone_id, user_id):
     await cloneownerdb.update_one(
         {"clone_id": clone_id},
-        {"$set": {"user_id": user_id}},
+        {"$set": {"user_id": user_id}}
         upsert=True
     )
 
