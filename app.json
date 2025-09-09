@@ -18,7 +18,7 @@
   ],
   "website": "https://github.com/strd-dev131/ChatBot",
   "repository": "https://github.com/strd-dev131/ChatBot",
-  "logo": "https://files.catbox.moe/m2kbru.jpg",
+  "logo": "https://telegra.ph/file/f6d8e64246bddc26b4f66.jpg",
   "success_url": "/",
   "env": {
     "API_ID": {
@@ -37,7 +37,7 @@
       "required": true
     },
     "MONGO_URL": {
-      "description": "MongoDB database URL. Get free from https://cloud.mongodb.com",
+      "description": "MongoDB database URL. Get free from https://cloud.mongodb.com (REQUIRED - No PostgreSQL needed)",
       "value": "",
       "required": true
     },
@@ -159,14 +159,6 @@
     }
   ],
   "stack": "heroku-22",
-  "addons": [
-    {
-      "plan": "heroku-postgresql:mini",
-      "options": {
-        "version": "15"
-      }
-    }
-  ],
   "scripts": {
     "postdeploy": "python -c \"print('🎉 EnaChatBot deployed successfully! 💕 Your AI girlfriend bot is ready!')\"" 
   },
