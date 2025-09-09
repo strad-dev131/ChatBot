@@ -10,8 +10,10 @@ from pyrogram.types import BotCommand
 from config import OWNER_ID
 from EnaChatBot import LOGGER, EnaChatBot, userbot, load_clone_owners
 from EnaChatBot.modules import ALL_MODULES
-#from EnaChatBot.modules.Clone import restart_bots
-#from EnaChatBot.modules.Id_Clone import restart_idchatbots
+
+# Fixed: Uncommented the required imports
+from EnaChatBot.modules.Clone import restart_bots
+from EnaChatBot.modules.Id_Clone import restart_idchatbots
 
 from colorama import Fore, Style, init
 init(autoreset=True)
@@ -41,16 +43,18 @@ async def anony_boot():
         try:
             await EnaChatBot.send_message(
                 int(OWNER_ID),
-                f"✨ {EnaChatBot.mention} is now <b>Alive & Running ✅</b>"
+                f"✨ {EnaChatBot.mention} is now **Alive & Running ✅**"
             )
             LOGGER.info(f"🚀 @{EnaChatBot.username} Started Successfully ✅")
         except Exception:
             LOGGER.warning(f"⚡ Please start @{EnaChatBot.username} from the owner account.")
 
+        # Start clone bots and id chatbots
         asyncio.create_task(restart_bots())
         asyncio.create_task(restart_idchatbots())
         await load_clone_owners()
 
+        # Start userbot if string session is provided
         if config.STRING1:
             try:
                 await userbot.start()
