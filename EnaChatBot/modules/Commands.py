@@ -1,7 +1,4 @@
 import random
-import os
-import shutil
-#from MukeshAPI import api
 from pymongo import MongoClient
 from pyrogram import Client, filters
 from pyrogram.errors import MessageEmpty
@@ -12,7 +9,9 @@ from EnaChatBot.database.chats import add_served_chat
 from EnaChatBot.database.users import add_served_user
 from config import MONGO_URL, OWNER_ID
 from EnaChatBot import EnaChatBot, mongo, LOGGER, db
-from EnaChatBot.modules.helpers import chatai, storeai, CHATBOT_ON
+
+# FIXED: Import helpers and languages
+from EnaChatBot.modules.helpers import chatai, storeai, CHATBOT_ON, languages
 from EnaChatBot.modules.helpers import (
     ABOUT_BTN,
     ABOUT_READ,
@@ -42,9 +41,9 @@ status_db = db.chatbot_status_db.status
 async def restart(client: Client, message: Message):
     reply = await message.reply_text("**🔁 Rᴇsᴛᴀʀᴛɪɴɢ 🔥 ...**")
     await message.delete()
-    await reply.edit_text("🥀 SᴜᴄᴄᴇssFᴜʟʟʏ RᴇSᴛᴀʀᴛᴇᴅ\n ︎ᴄʜᴀᴛʙᴏᴛ  🔥 ...\n\n💕 Pʟᴇᴀsᴇ Wᴀɪᴛ 5 ꜱᴇᴄ Fᴏʀ\nLᴏᴀᴅ Usᴇʀ Pʟᴜɢɪɴs ✨ ...</b>")
+    await reply.edit_text("🥀 SᴜᴄᴄᴇssFᴜʟʟʏ RᴇSᴛᴀʀᴛᴇᴅ\n ︎ᴄʜᴀᴛʙᴏᴛ 🔥 ...\n\n💕 Pʟᴇᴀsᴇ Wᴀɪᴛ 5 sᴇᴄ Fᴏʀ\nLᴏᴀᴅ Usᴇʀ Pʟᴜɢɪɴs ✨ ...")
     os.system(f"kill -9 {os.getpid()} && bash start")
-    
+ 
 def generate_language_buttons(languages):
     buttons = []
     current_row = []
@@ -60,7 +59,7 @@ def generate_language_buttons(languages):
 async def get_chat_language(chat_id):
     chat_lang = await lang_db.find_one({"chat_id": chat_id})
     return chat_lang["language"] if chat_lang and "language" in chat_lang else "en"
-    
+ 
 @EnaChatBot.on_message(filters.command(["lang", "language", "setlang"]))
 async def set_language(client: Client, message: Message):
     await message.reply_text(
@@ -78,14 +77,6 @@ async def status_command(client: Client, message: Message):
         await message.reply(f"Chatbot status for this chat: **{current_status}**")
     else:
         await message.reply("No status found for this chat.")
-
-
-@EnaChatBot.on_message(filters.command(["lang", "language", "setlang"]))
-async def set_language(client: Client, message: Message):
-    await message.reply_text(
-        "Please select your chat language:",
-        reply_markup=generate_language_buttons(languages)
-    )
 
 
 @EnaChatBot.on_message(filters.command(["resetlang", "nolang"]))
