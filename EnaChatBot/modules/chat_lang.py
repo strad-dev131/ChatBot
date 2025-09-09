@@ -1,8 +1,9 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from EnaChatBot import EnaChatBot as app, mongo, db
-#from MukeshAPI import api
 import asyncio
+
+# FIXED: Import languages from helpers
 from EnaChatBot.modules.helpers import chatai, CHATBOT_ON, languages
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
 
@@ -13,8 +14,14 @@ async def get_chat_language(chat_id):
     chat_lang = await lang_db.find_one({"chat_id": chat_id})
     return chat_lang["language"] if chat_lang and "language" in chat_lang else None
 
+# FIXED: Commented out the problematic auto language detection temporarily
+# This was causing issues with the MukeshAPI
 @app.on_message(filters.text, group=2)
 async def store_messages(client, message: Message):
+    """
+    Store messages for language detection
+    Note: MukeshAPI dependency commented out until proper API setup
+    """
     global message_cache
 
     chat_id = message.chat.id
@@ -29,34 +36,26 @@ async def store_messages(client, message: Message):
 
         message_cache[chat_id].append(message)
 
+        # FIXED: Temporarily disabled auto language detection
+        # Need to set up proper API key for MukeshAPI
         if len(message_cache[chat_id]) >= 30:
-            history = "\n\n".join(
-                [f"Text: {msg.text}..." for msg in message_cache[chat_id]]
-            )
-            user_input = f"""
-            sentences list :-
-            [
-            {history}
-            ]
-
-            Above is a list of sentences. Each sentence could be in different languages. Analyze the language of each sentence separately and identify the dominant language used for each sentence. and then Consider the language that appears the most, ignoring any commands like sentence start with /. 
-            Provide only the official language name with language code (like 'en' for English, 'hi' for Hindi). in this format :-
-            Lang Name :- ""
-            Lang code :- ""
-            ok so provideo me only overall [ Lang Name and Lang Code ] in above format Do not provide anything else.
-            """
-            await asyncio.sleep(60)
-            response = api.gemini(user_input)
-            x = response["results"]
-            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("sᴇʟᴇᴄᴛ ʟᴀɴɢᴜᴀɢᴇ", callback_data="choose_lang")]])    
-            await message.reply_text(f"**Chat language detected for this chat:**\n\n{x}\n\n**You can set my lang by /lang**", reply_markup=reply_markup)
+            # Clear cache to prevent memory issues
             message_cache[chat_id].clear()
-
-
+            
+            # For now, just notify about language setting
+            reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("sᴇʟᴇᴄᴛ ʟᴀɴɢᴜᴀɢᴇ", callback_data="choose_lang")]]) 
+            await message.reply_text(
+                "**💬 I've noticed you're chatting in this group!**\n\n"
+                "**🌍 Please set your preferred language for better responses.**\n\n"
+                "**Use /lang to set the chat language.**", 
+                reply_markup=reply_markup
+            )
 
 @app.on_message(filters.command("chatlang"))
 async def fetch_chat_lang(client, message):
     chat_id = message.chat.id
     chat_lang = await get_chat_language(chat_id)
-    await message.reply_text(f"The language code using for this chat is: {chat_lang}")
-
+    if chat_lang:
+        await message.reply_text(f"The language code using for this chat is: **{chat_lang}**")
+    else:
+        await message.reply_text("No specific language set for this chat. Using default (English).")
