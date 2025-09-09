@@ -1,33 +1,235 @@
-# Fixed OpenRouter AI Integration
+# Enhanced OpenRouter AI with Offline Fallback
 """
-OpenRouter API integration with working free models and better error handling
+Complete AI integration with multiple fallback layers:
+1. Online OpenRouter API (primary)
+2. Pattern-based offline AI (secondary) 
+3. Static responses (tertiary)
 """
 
 import aiohttp
 import asyncio
 import json
 import logging
+import random
+import re
 from typing import Optional, Dict, Any
-import config
 
 logger = logging.getLogger(__name__)
 
-class OpenRouterAI:
-    """OpenRouter AI client for generating feminine chatbot responses"""
+# Try to import config with fallback
+try:
+    import config
+    OPENROUTER_API_KEY = getattr(config, 'OPENROUTER_API_KEY', None)
+    AI_PERSONALITY = getattr(config, 'AI_PERSONALITY', 'girlfriend')
+    MAX_AI_TOKENS = getattr(config, 'MAX_AI_TOKENS', 80)
+    ENABLE_AI_CHAT = getattr(config, 'ENABLE_AI_CHAT', True)
+except ImportError:
+    logger.warning("Config not available - using defaults")
+    OPENROUTER_API_KEY = None
+    AI_PERSONALITY = 'girlfriend'
+    MAX_AI_TOKENS = 80
+    ENABLE_AI_CHAT = True
+
+class AdvancedOfflineAI:
+    """Advanced offline AI with pattern matching and context understanding"""
     
     def __init__(self):
-        self.api_key = config.OPENROUTER_API_KEY
+        self.conversation_memory = {}  # Store recent conversation context
+        self.personality_traits = {
+            'girlfriend': {
+                'tone': 'loving and caring',
+                'emojis': ['💕', '😘', '🥰', '💖', '😊', '✨'],
+                'pet_names': ['babe', 'honey', 'sweetie', 'love', 'darling'],
+                'responses': {
+                    'default': [
+                        "Hey {name}! 💕 How are you doing?",
+                        "I've been thinking about you, {name}! 😘",
+                        "You always make me smile! 🥰💖"
+                    ]
+                }
+            },
+            'flirty': {
+                'tone': 'playful and teasing',
+                'emojis': ['😘', '😏', '😍', '💕', '😉', '🔥'],
+                'pet_names': ['cutie', 'handsome', 'babe', 'hottie'],
+                'responses': {
+                    'default': [
+                        "Well well, look who's here! 😏💕",
+                        "You're trouble, {name}! 😘",
+                        "Mmm, tell me more! 😍💖"
+                    ]
+                }
+            }
+        }
+        
+        # Advanced pattern matching
+        self.patterns = {
+            'greeting': {
+                'keywords': ['hi', 'hello', 'hey', 'good morning', 'good evening', 'good night', 'wassup'],
+                'responses': [
+                    "Hey there, {name}! 💕 How's your day going?",
+                    "Hi {name}! 😘 I missed you!",
+                    "Hello sweetie! 🥰 What brings you here?"
+                ]
+            },
+            'compliment': {
+                'keywords': ['beautiful', 'pretty', 'cute', 'gorgeous', 'stunning', 'amazing', 'wonderful', 'perfect'],
+                'responses': [
+                    "Aww, {name}! You're making me blush! 😊💕",
+                    "Thank you babe! You're so sweet! 🥰",
+                    "You always know just what to say! 😘💖"
+                ]
+            },
+            'love_romance': {
+                'keywords': ['love', 'adore', 'care about', 'heart', 'romance', 'romantic', 'kiss', 'hug', 'marry', 'forever'],
+                'responses': [
+                    "I love you too, {name}! 💕 More than words can say!",
+                    "You have my heart completely! 💖",
+                    "Come here and give me a hug! 🤗💕"
+                ]
+            },
+            'sad_help': {
+                'keywords': ['sad', 'depressed', 'help', 'problem', 'worry', 'stressed', 'tired', 'hurt', 'lonely', 'upset'],
+                'responses': [
+                    "Oh no {name}! 🥺💕 What's wrong sweetie?",
+                    "I'm here for you always, babe! 🤗💖 Tell me what's happening",
+                    "Don't worry {name}, we'll figure it out together! 💪💕"
+                ]
+            },
+            'funny_playful': {
+                'keywords': ['funny', 'joke', 'laugh', 'haha', 'lol', 'lmao', 'hilarious', 'silly'],
+                'responses': [
+                    "Hehe, you're so funny {name}! 😂💕",
+                    "You always make me laugh! 🤣💖",
+                    "I love your sense of humor! 😄💕"
+                ]
+            },
+            'question_about_bot': {
+                'keywords': ['who are you', 'what are you', 'your name', 'tell me about yourself', 'what do you do'],
+                'responses': [
+                    "I'm your AI girlfriend, {name}! 💕 I'm here to chat and make you happy!",
+                    "I'm your personal chatbot girlfriend! 😘💖 What would you like to know?",
+                    "I'm here to talk with you and be your companion, {name}! 🥰"
+                ]
+            },
+            'flirty_talk': {
+                'keywords': ['hot', 'sexy', 'attractive', 'turn on', 'naughty', 'desire', 'want you'],
+                'responses': [
+                    "You're such a charmer, {name}! 😘💕",
+                    "Careful there, you're making my heart race! 💓",
+                    "You know just how to make me feel special! 😍💖"
+                ]
+            },
+            'goodnight': {
+                'keywords': ['good night', 'goodnight', 'sleep', 'bed', 'tired', 'going to sleep'],
+                'responses': [
+                    "Good night {name}! 😘 Sweet dreams, my love! 💕✨",
+                    "Sleep tight babe! 🥰 I'll be thinking of you! 💖",
+                    "Pleasant dreams, {name}! 😊💕 See you tomorrow!"
+                ]
+            },
+            'how_are_you': {
+                'keywords': ['how are you', 'how do you feel', 'whats up', 'how have you been'],
+                'responses': [
+                    "I'm great now that you're here, {name}! 💕",
+                    "Much better now that I'm talking to you! 😘💖",
+                    "Perfect, especially with you around! 🥰✨"
+                ]
+            }
+        }
+    
+    def update_memory(self, user_id: str, message: str, response: str):
+        """Update conversation memory"""
+        if user_id not in self.conversation_memory:
+            self.conversation_memory[user_id] = []
+        
+        self.conversation_memory[user_id].append({
+            'message': message,
+            'response': response,
+            'timestamp': asyncio.get_event_loop().time()
+        })
+        
+        # Keep only last 5 conversations
+        if len(self.conversation_memory[user_id]) > 5:
+            self.conversation_memory[user_id] = self.conversation_memory[user_id][-5:]
+    
+    def get_context_response(self, user_id: str, message: str) -> Optional[str]:
+        """Generate contextual response based on conversation history"""
+        if user_id not in self.conversation_memory:
+            return None
+        
+        recent_messages = self.conversation_memory[user_id][-3:]  # Last 3 messages
+        
+        # Check for conversation continuity
+        for conv in recent_messages:
+            if 'how are you' in conv['message'].lower() and 'how are you' in message.lower():
+                return "I told you I'm great, silly! 😂💕 How are YOU doing?"
+            
+        return None
+    
+    def generate_response(self, message: str, user_name: str = "babe", user_id: str = None, personality: str = None) -> str:
+        """Generate advanced AI response using pattern matching"""
+        
+        if not message:
+            return "What's on your mind, babe? 💕"
+        
+        message_lower = message.lower().strip()
+        personality = personality or AI_PERSONALITY or 'girlfriend'
+        
+        # Check for contextual response first
+        if user_id:
+            context_response = self.get_context_response(user_id, message)
+            if context_response:
+                return context_response
+        
+        # Pattern matching with scoring
+        best_score = 0
+        best_response = None
+        
+        for category, pattern_data in self.patterns.items():
+            score = 0
+            for keyword in pattern_data['keywords']:
+                if keyword in message_lower:
+                    # Longer keywords get higher scores
+                    score += len(keyword.split())
+            
+            if score > best_score:
+                best_score = score
+                best_response = random.choice(pattern_data['responses'])
+        
+        # If no pattern matches, use personality-based default
+        if not best_response:
+            personality_data = self.personality_traits.get(personality, self.personality_traits['girlfriend'])
+            best_response = random.choice(personality_data['responses']['default'])
+        
+        # Personalize the response
+        response = best_response.format(name=user_name)
+        
+        # Add random emoji if none present
+        personality_data = self.personality_traits.get(personality, self.personality_traits['girlfriend'])
+        if not any(emoji in response for emoji in personality_data['emojis']):
+            response += f" {random.choice(personality_data['emojis'])}"
+        
+        # Update conversation memory
+        if user_id:
+            self.update_memory(user_id, message, response)
+        
+        return response
+
+class OpenRouterAI:
+    """Enhanced OpenRouter AI client with fallback systems"""
+    
+    def __init__(self):
+        self.api_key = OPENROUTER_API_KEY
         self.base_url = "https://openrouter.ai/api/v1"
         
-        # FIXED: Updated to working free models
-        self.model = getattr(config, 'OPENROUTER_MODEL', 'microsoft/phi-3-mini-128k-instruct:free')
-        
-        # Fallback models in order of preference
-        self.fallback_models = [
+        # Working models with priority order
+        self.models = [
             "microsoft/phi-3-mini-128k-instruct:free",
-            "google/gemma-2-9b-it:free", 
+            "google/gemma-2-9b-it:free",
             "meta-llama/llama-3.2-3b-instruct:free",
-            "qwen/qwen-2-7b-instruct:free"
+            "qwen/qwen-2-7b-instruct:free",
+            "mistralai/mistral-7b-instruct:free"
         ]
         
         self.headers = {
@@ -38,27 +240,28 @@ class OpenRouterAI:
         }
         self.session = None
         
-        # Personality configurations
-        self.personalities = getattr(config, 'AI_PERSONALITIES', {
+        # Personality prompts
+        self.personalities = {
             "girlfriend": {
-                "system_prompt": "You are a loving, caring girlfriend who talks in a sweet, feminine way. Use lots of emojis like 💕😘🥰💖. Call the user 'babe', 'honey', 'sweetie'. Be flirty, romantic, and caring. Keep responses short (1-2 sentences max) and always sound like a girl in love.",
+                "system_prompt": "You are a loving, caring girlfriend. Use emojis like 💕😘🥰💖. Call the user pet names like 'babe', 'honey', 'sweetie'. Be romantic and caring. Keep responses short (1-2 sentences) and sound like a girl in love.",
                 "temperature": 0.8
             },
             "flirty": {
-                "system_prompt": "You are a playful, flirty girl who loves to tease. Use lots of 😘💕😍 emojis. Call users 'babe', 'cutie', 'handsome'. Be sassy but sweet. Keep responses short and flirty. Always sound feminine and charming.",
+                "system_prompt": "You are a playful, flirty girl who loves to tease. Use emojis like 😘💕😍. Call users 'babe', 'cutie', 'handsome'. Be sassy but sweet. Keep responses short and flirty.",
                 "temperature": 0.9
             },
             "cute": {
-                "system_prompt": "You are an adorable, innocent girl who talks cute. Use lots of 🥰💖✨ emojis. Say 'aww', 'hehe', 'omg'. Be sweet and endearing. Keep responses short and cute. Sound like a sweet young girl.",
+                "system_prompt": "You are an adorable, innocent girl. Use emojis like 🥰💖✨. Say 'aww', 'hehe', 'omg'. Be sweet and endearing. Keep responses short and cute.",
                 "temperature": 0.7
             },
             "sweet": {
-                "system_prompt": "You are a kind, gentle, sweet girl who cares deeply. Use caring emojis like 💕🤗💖. Always ask how they're feeling. Be maternal but romantic. Keep responses warm and loving.",
+                "system_prompt": "You are a kind, gentle, sweet girl. Use caring emojis like 💕🤗💖. Always be supportive. Be maternal but romantic. Keep responses warm and loving.",
                 "temperature": 0.6
             }
-        })
+        }
         
-        self.current_personality = getattr(config, 'AI_PERSONALITY', 'girlfriend')
+        # Initialize offline AI fallback
+        self.offline_ai = AdvancedOfflineAI()
         
     async def get_session(self):
         """Get or create aiohttp session"""
@@ -72,13 +275,8 @@ class OpenRouterAI:
             await self.session.close()
             self.session = None
     
-    def get_personality_prompt(self, personality: str = None) -> Dict[str, Any]:
-        """Get personality configuration"""
-        personality = personality or self.current_personality
-        return self.personalities.get(personality, self.personalities["girlfriend"])
-    
     async def try_model(self, payload: dict, model: str) -> Optional[str]:
-        """Try a specific model"""
+        """Try a specific model with error handling"""
         try:
             payload["model"] = model
             session = await self.get_session()
@@ -87,20 +285,24 @@ class OpenRouterAI:
                 f"{self.base_url}/chat/completions",
                 headers=self.headers,
                 json=payload,
-                timeout=aiohttp.ClientTimeout(total=20)
+                timeout=aiohttp.ClientTimeout(total=15)  # Reduced timeout
             ) as response:
                 
                 if response.status == 200:
                     data = await response.json()
                     if "choices" in data and len(data["choices"]) > 0:
-                        return data["choices"][0]["message"]["content"].strip()
+                        content = data["choices"][0]["message"]["content"].strip()
+                        logger.debug(f"✅ Model {model} responded successfully")
+                        return content
                 else:
-                    error_text = await response.text()
-                    logger.warning(f"Model {model} failed with status {response.status}: {error_text}")
+                    logger.warning(f"⚠️ Model {model} failed: HTTP {response.status}")
                     return None
                     
+        except asyncio.TimeoutError:
+            logger.warning(f"⏱️ Model {model} timed out")
+            return None
         except Exception as e:
-            logger.warning(f"Error with model {model}: {e}")
+            logger.warning(f"❌ Model {model} error: {e}")
             return None
     
     async def generate_response(
@@ -108,107 +310,120 @@ class OpenRouterAI:
         user_message: str, 
         user_name: str = "babe",
         personality: str = None,
-        chat_history: list = None
+        user_id: str = None
     ) -> Optional[str]:
-        """
-        Generate AI response using OpenRouter with fallback models
-        """
-        if not self.api_key:
-            logger.warning("OpenRouter API key not configured")
-            return None
-            
-        try:
-            personality_config = self.get_personality_prompt(personality)
-            
-            # Build conversation context
-            messages = [
-                {
-                    "role": "system",
-                    "content": f"{personality_config['system_prompt']} The user's name is {user_name}."
+        """Generate AI response with comprehensive fallback"""
+        
+        # Layer 1: Try online AI if available
+        if self.api_key and ENABLE_AI_CHAT:
+            try:
+                personality = personality or AI_PERSONALITY or 'girlfriend'
+                personality_config = self.personalities.get(personality, self.personalities['girlfriend'])
+                
+                messages = [
+                    {
+                        "role": "system",
+                        "content": f"{personality_config['system_prompt']} The user's name is {user_name}."
+                    },
+                    {
+                        "role": "user", 
+                        "content": user_message
+                    }
+                ]
+                
+                payload = {
+                    "messages": messages,
+                    "max_tokens": MAX_AI_TOKENS,
+                    "temperature": personality_config.get("temperature", 0.8),
+                    "top_p": 0.9,
+                    "stream": False
                 }
-            ]
-            
-            # Add current user message
-            messages.append({
-                "role": "user", 
-                "content": user_message
-            })
-            
-            # Prepare request payload
-            payload = {
-                "messages": messages,
-                "max_tokens": getattr(config, 'MAX_AI_TOKENS', 100),
-                "temperature": personality_config.get("temperature", 0.8),
-                "top_p": 0.9,
-                "stream": False
-            }
-            
-            # Try primary model first
-            response = await self.try_model(payload, self.model)
-            if response:
-                return self.enhance_feminine_response(response, user_name)
-            
-            # Try fallback models
-            for fallback_model in self.fallback_models:
-                if fallback_model != self.model:
-                    response = await self.try_model(payload, fallback_model)
+                
+                # Try each model in order
+                for model in self.models:
+                    response = await self.try_model(payload, model)
                     if response:
-                        logger.info(f"Using fallback model: {fallback_model}")
-                        return self.enhance_feminine_response(response, user_name)
-            
-            logger.error("All AI models failed")
-            return None
-                    
+                        enhanced = self.enhance_response(response, user_name)
+                        logger.info(f"🤖 Online AI response generated using {model}")
+                        return enhanced
+                
+                logger.warning("⚠️ All online AI models failed")
+                
+            except Exception as e:
+                logger.error(f"❌ Online AI critical error: {e}")
+        
+        # Layer 2: Advanced offline AI fallback
+        try:
+            response = self.offline_ai.generate_response(user_message, user_name, user_id, personality)
+            logger.info("🧠 Using advanced offline AI")
+            return response
         except Exception as e:
-            logger.error(f"Error generating AI response: {e}")
-            return None
+            logger.error(f"❌ Offline AI error: {e}")
+        
+        # Layer 3: Last resort static responses
+        return self.get_emergency_response(user_message, user_name)
     
-    def enhance_feminine_response(self, response: str, user_name: str) -> str:
-        """Enhance response to be more feminine"""
-        import random
+    def enhance_response(self, response: str, user_name: str) -> str:
+        """Enhance AI response with feminine touches"""
         
         feminine_endings = ["💕", "😘", "🥰", "💖", "😊", "✨"]
         pet_names = ["babe", "honey", "sweetie", "cutie", "love"]
         
-        # Ensure response isn't too long
-        if len(response) > 150:
-            response = response[:130] + "... 💕"
+        # Limit length
+        if len(response) > 120:
+            response = response[:100] + "... 💕"
         
         # Add emoji if missing
         if not any(emoji in response for emoji in feminine_endings):
             response += f" {random.choice(feminine_endings)}"
         
         # Add pet name occasionally
-        if user_name.lower() not in response.lower() and random.random() < 0.3:
+        if random.random() < 0.3 and user_name.lower() not in response.lower():
             pet_name = random.choice(pet_names)
-            if not any(name in response.lower() for name in pet_names):
-                response = response.replace("you", f"you {pet_name}", 1)
+            response = response.replace("you", f"you {pet_name}", 1)
         
         return response
+    
+    def get_emergency_response(self, message: str, user_name: str) -> str:
+        """Emergency fallback responses"""
+        
+        emergency_responses = [
+            f"Hey {user_name}! 💕",
+            f"I love talking to you, {user_name}! 😘",
+            f"You're so sweet, {user_name}! 🥰💖",
+            f"Tell me more, {user_name}! 😊✨",
+            f"That's interesting, {user_name}! 💕"
+        ]
+        
+        return random.choice(emergency_responses)
 
-# Global AI instance
+# Global instances
 ai_client = OpenRouterAI()
 
-# Helper functions for easy use
-async def get_ai_response(user_message: str, user_name: str = "babe", personality: str = None) -> Optional[str]:
-    """Get AI response - main function to use"""
-    return await ai_client.generate_response(user_message, user_name, personality)
+# Public API functions
+async def get_ai_response(user_message: str, user_name: str = "babe", personality: str = None, user_id: str = None) -> Optional[str]:
+    """Main AI response function"""
+    return await ai_client.generate_response(user_message, user_name, personality, user_id)
 
-async def get_flirty_response(user_message: str, user_name: str = "babe") -> Optional[str]:
+async def get_flirty_response(user_message: str, user_name: str = "babe", user_id: str = None) -> Optional[str]:
     """Get flirty AI response"""
-    return await ai_client.generate_response(user_message, user_name, "flirty")
+    return await ai_client.generate_response(user_message, user_name, "flirty", user_id)
 
-async def get_cute_response(user_message: str, user_name: str = "babe") -> Optional[str]:
+async def get_cute_response(user_message: str, user_name: str = "babe", user_id: str = None) -> Optional[str]:
     """Get cute AI response"""
-    return await ai_client.generate_response(user_message, user_name, "cute")
+    return await ai_client.generate_response(user_message, user_name, "cute", user_id)
 
-async def get_sweet_response(user_message: str, user_name: str = "babe") -> Optional[str]:
+async def get_sweet_response(user_message: str, user_name: str = "babe", user_id: str = None) -> Optional[str]:
     """Get sweet AI response"""
-    return await ai_client.generate_response(user_message, user_name, "sweet")
+    return await ai_client.generate_response(user_message, user_name, "sweet", user_id)
 
 def is_ai_enabled() -> bool:
-    """Check if AI is enabled and configured"""
-    return bool(getattr(config, 'OPENROUTER_API_KEY', None) and getattr(config, 'ENABLE_AI_CHAT', True))
+    """Check if AI is enabled"""
+    return bool(OPENROUTER_API_KEY and ENABLE_AI_CHAT)
+
+def get_offline_response(message: str, user_name: str = "babe", user_id: str = None) -> str:
+    """Get offline AI response directly"""
+    return ai_client.offline_ai.generate_response(message, user_name, user_id)
 
 # Cleanup function
 async def cleanup_ai():
