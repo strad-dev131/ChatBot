@@ -61,7 +61,7 @@ async def load_clone_owners():
 async def save_clonebot_owner(bot_id, user_id):
     await cloneownerdb.update_one(
         {"bot_id": bot_id},
-        {"$set": {"user_id": user_id}},  # Fixed missing comma here
+        {"$set": {"user_id": user_id}},
         upsert=True
     )
 
@@ -78,7 +78,7 @@ async def delete_clone_owner(bot_id):
 async def save_idclonebot_owner(clone_id, user_id):
     await cloneownerdb.update_one(
         {"clone_id": clone_id},
-        {"$set": {"user_id": user_id}},  # Fixed missing comma here
+        {"$set": {"user_id": user_id}},
         upsert=True
     )
 
@@ -152,7 +152,17 @@ def get_readable_time(seconds: int) -> str:
 
 # ---------------- INIT OBJECTS ---------------- #
 
-EnaChatBot = EnaChatBot  # Fix to avoid TypeError
-userbot = EnaChatBot()   # Initialize the instance correctly later
+# Fixed: Proper initialization
+EnaChatBot = EnaChatBot()
 
-
+# Fixed: Create userbot client properly
+if config.STRING1:
+    userbot = Client(
+        name="userbot",
+        api_id=config.API_ID,
+        api_hash=config.API_HASH,
+        session_string=config.STRING1,
+        in_memory=True
+    )
+else:
+    userbot = None
