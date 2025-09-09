@@ -15,5 +15,13 @@ Flask
 uvloop
 psutil
 langdetect
-python-dotenv
 colorama
+# ENHANCED: AI Dependencies for OpenRouter Integration
+aiohttp==3.9.1
+aiofiles==23.2.1
+# Additional dependencies for better AI responses
+httpx==0.25.2
+tenacity==8.2.3
+# Performance and reliability
+cachetools==5.3.2
+backoff==2.2.1
