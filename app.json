@@ -1,62 +1,180 @@
 {
-  "name": "EnaChatBot",
-  "description": "A Telegram bot maintained under the @TeamXUpdate Community 🤖",
-  "logo": "https://files.catbox.moe/m2kbru.jpg",
+  "name": "EnaChatBot - AI Girlfriend Bot",
+  "description": "🤖💕 Advanced AI-Powered Telegram ChatBot with Girl Personality - Clone bots, unlimited AI conversations, multi-language support, and feminine responses using OpenRouter API",
   "keywords": [
-    "Chatbot",
-    "mongodb",
+    "telegram",
+    "bot", 
+    "chatbot",
+    "ai",
+    "girlfriend",
+    "clone",
+    "openrouter",
     "python",
-    "pyrogram"
+    "pyrogram",
+    "mongodb",
+    "girl",
+    "feminine",
+    "flirty"
   ],
-  "buildpacks": [{
-    "url": "heroku/python"
-  }],
-  "repository": "https://github.com/strad-dev131/ChatBot",
+  "website": "https://github.com/strd-dev131/ChatBot",
+  "repository": "https://github.com/strd-dev131/ChatBot",
+  "logo": "https://files.catbox.moe/m2kbru.jpg",
+  "success_url": "/",
   "env": {
     "API_ID": {
-      "description": "Get this value from https://my.telegram.org (API Development Tools)",
-      "required": true,
-      "value": ""
+      "description": "Get this value from https://my.telegram.org",
+      "value": "",
+      "required": true
     },
     "API_HASH": {
-      "description": "Get this value from https://my.telegram.org (API Development Tools)",
-      "required": true,
-      "value": ""
+      "description": "Get this value from https://my.telegram.org", 
+      "value": "",
+      "required": true
     },
     "BOT_TOKEN": {
-      "description": "A Bot token from @BotFather",
-      "required": true,
-      "value": ""
-    },
-    "STRING_SESSION": {
-      "description": "Fill Here A Pyrogram String Session For Id-Chatbot, Get it from: https://telegram.tools/session-string-generator#pyrogram,user (Optional, skip if you don't want id-chatbot)",
-      "required": false,
-      "value": ""
+      "description": "Get bot token from @BotFather",
+      "value": "",
+      "required": true
     },
     "MONGO_URL": {
-      "description": "Get a MongoDB connection string from https://cloud.mongodb.com",
-      "required": true,
-      "value": ""
+      "description": "MongoDB database URL. Get free from https://cloud.mongodb.com",
+      "value": "",
+      "required": true
     },
     "OWNER_ID": {
-      "description": "Fill Here Your Owner User Id (numeric)",
-      "required": true,
-      "value": ""
+      "description": "Your Telegram user ID. Get from @userinfobot",
+      "value": "",
+      "required": true
     },
     "OWNER_USERNAME": {
-      "description": "Fill Here Your Telegram Username (without @)",
-      "required": true,
-      "value": ""
+      "description": "Your Telegram username (without @)",
+      "value": "",
+      "required": false
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "🚨 REQUIRED FOR AI GIRL PERSONALITY! Get FREE API key from https://openrouter.ai/ - Enables unlimited smart feminine responses",
+      "value": "",
+      "required": true
+    },
+    "AI_PERSONALITY": {
+      "description": "Choose AI personality: girlfriend (loving), flirty (playful), cute (innocent), sweet (caring)",
+      "value": "girlfriend",
+      "required": false
+    },
+    "OPENROUTER_MODEL": {
+      "description": "AI model to use. Free options: meta-llama/llama-3.1-8b-instruct:free, microsoft/phi-3-mini-128k-instruct:free",
+      "value": "meta-llama/llama-3.1-8b-instruct:free",
+      "required": false
+    },
+    "ENABLE_AI_CHAT": {
+      "description": "Enable AI-powered responses (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "MAX_AI_TOKENS": {
+      "description": "Maximum tokens for AI responses (50-200)",
+      "value": "150",
+      "required": false
     },
     "SUPPORT_GRP": {
-      "description": "Your Telegram Support Group username (without @)",
-      "required": false,
-      "value": "TeamsXchat"
+      "description": "Support group username (without @)",
+      "value": "TeamsXchat",
+      "required": false
     },
     "UPDATE_CHNL": {
-      "description": "Your Telegram Updates Channel username (without @)",
-      "required": false,
-      "value": "TeamXUpdate"
+      "description": "Update channel username (without @)", 
+      "value": "TeamXUpdate",
+      "required": false
+    },
+    "STRING_SESSION": {
+      "description": "Pyrogram string session for additional features (optional)",
+      "value": "",
+      "required": false
+    },
+    "LOG_GROUP_ID": {
+      "description": "Log group chat ID for bot logs (optional)",
+      "value": "",
+      "required": false
+    },
+    "TIMEZONE": {
+      "description": "Bot timezone",
+      "value": "Asia/Kolkata", 
+      "required": false
+    },
+    "DEBUG": {
+      "description": "Enable debug mode (True/False)",
+      "value": "False",
+      "required": false
+    },
+    "ENABLE_CLONE_FEATURE": {
+      "description": "Enable bot cloning feature (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_BROADCAST_FEATURE": {
+      "description": "Enable broadcast feature (True/False)",
+      "value": "True", 
+      "required": false
+    },
+    "ENABLE_CHATBOT_FEATURE": {
+      "description": "Enable chatbot responses (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "DEFAULT_LANGUAGE": {
+      "description": "Default bot language (en, hi, es, fr, etc.)",
+      "value": "en",
+      "required": false
+    },
+    "RATE_LIMIT_MESSAGES": {
+      "description": "Rate limit: max messages per window",
+      "value": "30",
+      "required": false
+    },
+    "RATE_LIMIT_WINDOW": {
+      "description": "Rate limit window in seconds",
+      "value": "60",
+      "required": false
+    },
+    "MAX_CLONES_PER_USER": {
+      "description": "Maximum clones per user",
+      "value": "5",
+      "required": false
+    },
+    "BROADCAST_DELAY": {
+      "description": "Delay between broadcast messages (seconds)",
+      "value": "0.1",
+      "required": false
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "stack": "heroku-22",
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini",
+      "options": {
+        "version": "15"
+      }
+    }
+  ],
+  "scripts": {
+    "postdeploy": "python -c \"print('🎉 EnaChatBot deployed successfully! 💕 Your AI girlfriend bot is ready!')\"" 
+  },
+  "environments": {
+    "test": {
+      "scripts": {
+        "test": "python -m pytest"
+      }
     }
   }
 }
