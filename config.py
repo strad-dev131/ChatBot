@@ -69,6 +69,15 @@ OWNER_USERNAME = get_env_var("OWNER_USERNAME", "SID_ELITE", required=False)
 SUPPORT_GRP = get_env_var("SUPPORT_GRP", "TeamsXchat", required=False)
 UPDATE_CHNL = get_env_var("UPDATE_CHNL", "TeamXUpdate", required=False)
 
+# ENHANCED: OpenRouter API Configuration for AI Responses
+OPENROUTER_API_KEY = get_env_var("OPENROUTER_API_KEY", required=False)
+OPENROUTER_MODEL = get_env_var("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free", required=False)
+
+# AI Configuration
+ENABLE_AI_CHAT = get_env_var("ENABLE_AI_CHAT", "True", required=False).lower() == "true"
+AI_PERSONALITY = get_env_var("AI_PERSONALITY", "girlfriend", required=False)  # girlfriend, flirty, cute, sweet
+MAX_AI_TOKENS = int(get_env_var("MAX_AI_TOKENS", "150", required=False))
+
 # Log Group (Optional)
 LOG_GROUP_ID = get_env_var("LOG_GROUP_ID", required=False)
 if LOG_GROUP_ID:
@@ -81,10 +90,6 @@ if LOG_GROUP_ID:
 WEBHOOK_URL = get_env_var("WEBHOOK_URL", required=False)
 PORT = int(get_env_var("PORT", "8080"))
 HEROKU_APP_NAME = get_env_var("HEROKU_APP_NAME", required=False)
-
-# API Keys for enhanced features (Optional)
-OPENAI_API_KEY = get_env_var("OPENAI_API_KEY", required=False)
-GEMINI_API_KEY = get_env_var("GEMINI_API_KEY", required=False)
 
 # Timezone Configuration
 TIMEZONE = get_env_var("TIMEZONE", "Asia/Kolkata", required=False)
@@ -142,10 +147,39 @@ ENABLE_LANGUAGE_DETECTION = get_env_var("ENABLE_LANGUAGE_DETECTION", "True", req
 MONGODB_MAX_CONNECTIONS = int(get_env_var("MONGODB_MAX_CONNECTIONS", "100", required=False))
 CONCURRENT_UPDATES = get_env_var("CONCURRENT_UPDATES", "True", required=False).lower() == "true"
 
+# OpenRouter Configuration Details
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_HEADERS = {
+    "Authorization": f"Bearer {OPENROUTER_API_KEY}" if OPENROUTER_API_KEY else None,
+    "HTTP-Referer": "https://github.com/strd-dev131/ChatBot",
+    "X-Title": "EnaChatBot - AI Girlfriend Bot"
+}
+
+# AI Personality Prompts
+AI_PERSONALITIES = {
+    "girlfriend": {
+        "system_prompt": "You are a loving, caring girlfriend who talks in a sweet, feminine way. Use lots of emojis, pet names like 'babe', 'honey', 'sweetie'. Be flirty, romantic, and caring. Keep responses short (1-2 sentences max) and always sound like a girl in love. Use feminine language and expressions.",
+        "temperature": 0.8
+    },
+    "flirty": {
+        "system_prompt": "You are a playful, flirty girl who loves to tease and be romantic. Use lots of 😘💕😍 emojis. Call users 'babe', 'cutie', 'handsome'. Be a bit sassy but sweet. Keep responses short and flirty. Always sound feminine and charming.",
+        "temperature": 0.9
+    },
+    "cute": {
+        "system_prompt": "You are an adorable, innocent girl who talks in a cute, bubbly way. Use lots of 🥰💖✨ emojis. Say things like 'aww', 'hehe', 'omg'. Be sweet, innocent, and endearing. Keep responses short and cute. Sound like a sweet young girl.",
+        "temperature": 0.7
+    },
+    "sweet": {
+        "system_prompt": "You are a kind, gentle, sweet girl who cares deeply about others. Use caring emojis like 💕🤗💖. Always ask how they're feeling, offer comfort and support. Be maternal but romantic. Keep responses warm and loving. Sound like the sweetest girl ever.",
+        "temperature": 0.6
+    }
+}
+
 # Validation checks
 def validate_config():
     """Validate configuration settings"""
     errors = []
+    warnings = []
     
     if len(str(API_ID)) < 7:
         errors.append("API_ID seems invalid (too short)")
@@ -159,10 +193,19 @@ def validate_config():
     if not MONGO_URL.startswith(("mongodb://", "mongodb+srv://")):
         errors.append("MONGO_URL seems invalid")
     
+    if not OPENROUTER_API_KEY:
+        warnings.append("OPENROUTER_API_KEY not set - AI responses will use fallback responses")
+    
     if errors:
-        print("⚠️  Configuration warnings:")
+        print("❌ Configuration errors:")
         for error in errors:
             print(f"   • {error}")
+        sys.exit(1)
+    
+    if warnings:
+        print("⚠️  Configuration warnings:")
+        for warning in warnings:
+            print(f"   • {warning}")
         print()
 
 # Run validation
@@ -175,6 +218,8 @@ if DEBUG:
     print(f"   • Bot Token: {BOT_TOKEN[:10]}...")
     print(f"   • Owner ID: {OWNER_ID}")
     print(f"   • Database: Connected" if MONGO_URL else "Not configured")
+    print(f"   • OpenRouter AI: {'Enabled' if OPENROUTER_API_KEY else 'Disabled'}")
+    print(f"   • AI Personality: {AI_PERSONALITY}")
     print(f"   • Debug Mode: {DEBUG}")
     print()
 
