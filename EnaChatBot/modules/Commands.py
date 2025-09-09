@@ -1,94 +1,208 @@
-import random
-from pymongo import MongoClient
-from pyrogram import Client, filters
-from pyrogram.errors import MessageEmpty
-from pyrogram.enums import ChatAction, ChatMemberStatus as CMS
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
-from deep_translator import GoogleTranslator
-from EnaChatBot.database.chats import add_served_chat
-from EnaChatBot.database.users import add_served_user
-from config import MONGO_URL, OWNER_ID
-from EnaChatBot import EnaChatBot, mongo, LOGGER, db
+# AI Command Module for EnaChatBot
+"""
+Commands to control AI personality and responses
+"""
 
-# FIXED: Import helpers and languages
-from EnaChatBot.modules.helpers import chatai, storeai, CHATBOT_ON, languages
-from EnaChatBot.modules.helpers import (
-    ABOUT_BTN,
-    ABOUT_READ,
-    ADMIN_READ,
-    BACK,
-    CHATBOT_BACK,
-    CHATBOT_READ,
-    DEV_OP,
-    HELP_BTN,
-    HELP_READ,
-    MUSIC_BACK_BTN,
-    SOURCE_READ,
-    START,
-    TOOLS_DATA_READ,
-)
 import asyncio
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from EnaChatBot import EnaChatBot, LOGGER
+from EnaChatBot.openrouter_ai import ai_client, is_ai_enabled
+from config import OWNER_ID, AI_PERSONALITIES
+import config
 
-translator = GoogleTranslator()
-
-lang_db = db.ChatLangDb.LangCollection
-status_db = db.chatbot_status_db.status
-
-
-@EnaChatBot.on_message(
-    filters.command(["restart"]) & filters.user(int(OWNER_ID))
-)
-async def restart(client: Client, message: Message):
-    reply = await message.reply_text("**🔁 Rᴇsᴛᴀʀᴛɪɴɢ 🔥 ...**")
-    await message.delete()
-    await reply.edit_text("🥀 SᴜᴄᴄᴇssFᴜʟʟʏ RᴇSᴛᴀʀᴛᴇᴅ\n ︎ᴄʜᴀᴛʙᴏᴛ 🔥 ...\n\n💕 Pʟᴇᴀsᴇ Wᴀɪᴛ 5 sᴇᴄ Fᴏʀ\nLᴏᴀᴅ Usᴇʀ Pʟᴜɢɪɴs ✨ ...")
-    os.system(f"kill -9 {os.getpid()} && bash start")
- 
-def generate_language_buttons(languages):
+# AI Personality selection keyboard
+def get_personality_keyboard():
+    """Generate personality selection keyboard"""
     buttons = []
-    current_row = []
-    for lang, code in languages.items():
-        current_row.append(InlineKeyboardButton(lang.capitalize(), callback_data=f'setlang_{code}'))
-        if len(current_row) == 4:
-            buttons.append(current_row)
-            current_row = []
-    if current_row:
-        buttons.append(current_row)
+    personalities = {
+        "girlfriend": "💕 Girlfriend (Loving & Caring)",
+        "flirty": "😘 Flirty (Playful & Teasing)", 
+        "cute": "🥰 Cute (Sweet & Innocent)",
+        "sweet": "💖 Sweet (Kind & Gentle)"
+    }
+    
+    for key, name in personalities.items():
+        buttons.append([InlineKeyboardButton(name, callback_data=f"setpersonality_{key}")])
+    
+    buttons.append([InlineKeyboardButton("❌ Close", callback_data="close_personality")])
     return InlineKeyboardMarkup(buttons)
 
-async def get_chat_language(chat_id):
-    chat_lang = await lang_db.find_one({"chat_id": chat_id})
-    return chat_lang["language"] if chat_lang and "language" in chat_lang else "en"
- 
-@EnaChatBot.on_message(filters.command(["lang", "language", "setlang"]))
-async def set_language(client: Client, message: Message):
+@EnaChatBot.on_message(filters.command(["aipersonality", "personality"]) & filters.user(int(OWNER_ID)))
+async def set_ai_personality(client: Client, message: Message):
+    """Set AI personality (Owner only)"""
+    
+    if not is_ai_enabled():
+        await message.reply_text(
+            "**🚫 AI is not enabled!**\n\n"
+            "**💡 Please set OPENROUTER_API_KEY in your environment variables.**\n"
+            "**🔗 Get free API key from: https://openrouter.ai/**"
+        )
+        return
+    
+    current_personality = config.AI_PERSONALITY
     await message.reply_text(
-        "Please select your chat language:",
-        reply_markup=generate_language_buttons(languages)
+        f"**🤖 AI Personality Settings**\n\n"
+        f"**Current Personality:** `{current_personality.title()}`\n\n"
+        f"**Choose a new personality for your AI girlfriend:**",
+        reply_markup=get_personality_keyboard()
     )
 
-
-@EnaChatBot.on_message(filters.command("status"))
-async def status_command(client: Client, message: Message):
-    chat_id = message.chat.id
-    chat_status = await status_db.find_one({"chat_id": chat_id})
-    if chat_status:
-        current_status = chat_status.get("status", "not found")
-        await message.reply(f"Chatbot status for this chat: **{current_status}**")
+@EnaChatBot.on_callback_query(filters.regex(r"^setpersonality_"))
+async def handle_personality_change(client: Client, query):
+    """Handle personality change callback"""
+    
+    if query.from_user.id != int(OWNER_ID):
+        await query.answer("❌ Only owner can change AI personality!", show_alert=True)
+        return
+    
+    personality = query.data.split("_")[1]
+    
+    if personality in AI_PERSONALITIES:
+        # Update config (this would need to be saved to a config file in production)
+        config.AI_PERSONALITY = personality
+        ai_client.current_personality = personality
+        
+        personality_names = {
+            "girlfriend": "💕 Girlfriend (Loving & Caring)",
+            "flirty": "😘 Flirty (Playful & Teasing)",
+            "cute": "🥰 Cute (Sweet & Innocent)", 
+            "sweet": "💖 Sweet (Kind & Gentle)"
+        }
+        
+        await query.edit_message_text(
+            f"**✅ AI Personality Updated!**\n\n"
+            f"**New Personality:** {personality_names[personality]}\n\n"
+            f"**🤖 Your bot will now respond with {personality} personality!**\n"
+            f"**💕 Try sending a message to see the new personality in action!**"
+        )
+        
+        LOGGER.info(f"AI personality changed to: {personality}")
     else:
-        await message.reply("No status found for this chat.")
+        await query.answer("❌ Invalid personality selected!", show_alert=True)
 
+@EnaChatBot.on_callback_query(filters.regex(r"^close_personality$"))
+async def close_personality_menu(client: Client, query):
+    """Close personality selection menu"""
+    if query.from_user.id != int(OWNER_ID):
+        await query.answer("❌ Access denied!", show_alert=True)
+        return
+    
+    await query.message.delete()
 
-@EnaChatBot.on_message(filters.command(["resetlang", "nolang"]))
-async def reset_language(client: Client, message: Message):
-    chat_id = message.chat.id
-    lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": "nolang"}}, upsert=True)
-    await message.reply_text("**Bot language has been reset in this chat to mix language.**")
+@EnaChatBot.on_message(filters.command(["aitest", "testai"]) & filters.user(int(OWNER_ID)))
+async def test_ai_response(client: Client, message: Message):
+    """Test AI response (Owner only)"""
+    
+    if not is_ai_enabled():
+        await message.reply_text("**🚫 AI is not enabled! Please set OPENROUTER_API_KEY.**")
+        return
+    
+    if len(message.command) < 2:
+        await message.reply_text(
+            "**🧪 AI Response Test**\n\n"
+            "**Usage:** `/aitest your message here`\n\n"
+            "**Example:** `/aitest Hello beautiful!`"
+        )
+        return
+    
+    test_message = " ".join(message.command[1:])
+    
+    status_msg = await message.reply_text("**🤖 Generating AI response...**")
+    
+    try:
+        from EnaChatBot.openrouter_ai import get_ai_response
+        
+        response = await get_ai_response(test_message, "Owner")
+        
+        if response:
+            await status_msg.edit_text(
+                f"**🧪 AI Test Results**\n\n"
+                f"**Input:** `{test_message}`\n\n"
+                f"**AI Response:** {response}\n\n"
+                f"**Personality:** `{config.AI_PERSONALITY}`\n"
+                f"**Model:** `{config.OPENROUTER_MODEL}`"
+            )
+        else:
+            await status_msg.edit_text(
+                "**❌ AI Test Failed**\n\n"
+                "**Could not generate response. Check:**\n"
+                "• OpenRouter API key validity\n"
+                "• Internet connection\n" 
+                "• API rate limits"
+            )
+            
+    except Exception as e:
+        await status_msg.edit_text(f"**❌ AI Test Error:** `{str(e)}`")
+        LOGGER.error(f"AI test error: {e}")
 
+@EnaChatBot.on_message(filters.command(["aistatus", "ainfo"]))
+async def ai_status(client: Client, message: Message):
+    """Show AI status information"""
+    
+    ai_enabled = is_ai_enabled()
+    
+    status_text = f"**🤖 AI Status Information**\n\n"
+    status_text += f"**AI Enabled:** {'✅ Yes' if ai_enabled else '❌ No'}\n"
+    
+    if ai_enabled:
+        status_text += f"**Personality:** `{config.AI_PERSONALITY.title()}`\n"
+        status_text += f"**Model:** `{config.OPENROUTER_MODEL}`\n"
+        status_text += f"**Max Tokens:** `{config.MAX_AI_TOKENS}`\n"
+        status_text += f"**API Provider:** OpenRouter\n\n"
+        status_text += "**💕 AI girlfriend responses are active!**"
+    else:
+        status_text += "\n**💡 To enable AI:**\n"
+        status_text += "1. Get free API key from https://openrouter.ai/\n"
+        status_text += "2. Set OPENROUTER_API_KEY in environment\n"
+        status_text += "3. Restart the bot"
+    
+    await message.reply_text(status_text)
 
-@EnaChatBot.on_message(filters.command("chatbot"))
-async def chatbot_command(client: Client, message: Message):
-    await message.reply_text(
-        f"Chat: {message.chat.title}\n**Choose an option to enable/disable the chatbot.**",
-        reply_markup=InlineKeyboardMarkup(CHATBOT_ON),
-    )
+@EnaChatBot.on_message(filters.command(["aihelp"]))
+async def ai_help(client: Client, message: Message):
+    """Show AI commands help"""
+    
+    help_text = """**🤖 AI Commands Help**
+
+**For Everyone:**
+• `/aistatus` - Check AI status
+• `/aihelp` - Show this help
+
+**For Owner Only:**
+• `/personality` - Change AI personality
+• `/aitest <message>` - Test AI response
+• `/aistatus` - Detailed AI information
+
+**💕 Available Personalities:**
+• **Girlfriend** - Loving, caring responses
+• **Flirty** - Playful, teasing responses  
+• **Cute** - Sweet, innocent responses
+• **Sweet** - Kind, gentle responses
+
+**🔧 Setup Instructions:**
+1. Get free API key: https://openrouter.ai/
+2. Set OPENROUTER_API_KEY environment variable
+3. Choose your favorite personality
+4. Enjoy unlimited AI girlfriend chats! 💖"""
+
+    await message.reply_text(help_text)
+
+# Add new command to existing start.py or commands.py for easy access
+@EnaChatBot.on_message(filters.command(["ai"]))
+async def ai_quick_info(client: Client, message: Message):
+    """Quick AI information"""
+    
+    if is_ai_enabled():
+        await message.reply_text(
+            f"**🤖 AI Active: {config.AI_PERSONALITY.title()} Personality 💕**\n\n"
+            f"**💬 Send me any message and I'll respond with my {config.AI_PERSONALITY} personality!**\n\n"
+            f"**🔧 Use /aihelp for more commands**"
+        )
+    else:
+        await message.reply_text(
+            "**🤖 AI Girlfriend Mode 💕**\n\n"
+            "**❌ AI is currently disabled**\n\n"
+            "**💡 Owner can enable AI by setting OPENROUTER_API_KEY**\n"
+            "**🔗 Get free key: https://openrouter.ai/**"
+        )
