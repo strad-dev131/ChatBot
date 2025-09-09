@@ -256,7 +256,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you like this project, please ⭐ star this repository and 🍴 fork it!
 
 <div align="center">
-  <h3>Made with ❤️ by <a href="https://github.com/strad-dev131">strad-dev131</a></h3>
+  <h3>Made with ❤️ by <a href="https://github.com/strad-dev131">Elite_Sid</a></h3>
 </div>
 
 ---
