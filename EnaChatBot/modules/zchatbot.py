@@ -1,249 +1,244 @@
 import random
-from pymongo import MongoClient
-from pyrogram import Client, filters
-from pyrogram.errors import MessageEmpty
+import asyncio
+import re
 from datetime import datetime, timedelta
-from pyrogram.enums import ChatType, ChatMemberStatus  # FIXED: Removed ChatMember, added ChatMemberStatus
-from pyrogram.errors import UserNotParticipant
-from pyrogram.enums import ChatAction
+from pyrogram import Client, filters
+from pyrogram.errors import MessageEmpty, FloodWait
+from pyrogram.enums import ChatType, ChatAction
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
 from deep_translator import GoogleTranslator
 from EnaChatBot.database.chats import add_served_chat
 from EnaChatBot.database.users import add_served_user
-from config import MONGO_URL
 from EnaChatBot import EnaChatBot, mongo, LOGGER, db
 
 # Import AI functionality with comprehensive error handling
 AI_AVAILABLE = False
 try:
     from EnaChatBot.openrouter_ai import (
-        get_ai_response, 
-        get_flirty_response, 
-        get_cute_response, 
-        get_sweet_response,
-        is_ai_enabled
+        get_ai_response, get_flirty_response, get_cute_response, get_sweet_response,
+        is_ai_enabled, get_offline_response
     )
     AI_AVAILABLE = True
     LOGGER.info("✅ AI module loaded successfully")
-except ImportError as e:
-    LOGGER.warning(f"⚠️ AI module not available: {e}")
 except Exception as e:
-    LOGGER.error(f"❌ AI module error: {e}")
+    LOGGER.warning(f"⚠️ AI module not available: {e}")
+    AI_AVAILABLE = False
 
 # Import helpers with error handling
 try:
     from EnaChatBot.modules.helpers import chatai, CHATBOT_ON
-    from EnaChatBot.modules.helpers import (
-        ABOUT_BTN, ABOUT_READ, ADMIN_READ, BACK, CHATBOT_BACK, CHATBOT_READ,
-        DEV_OP, HELP_BTN, HELP_READ, MUSIC_BACK_BTN, SOURCE_READ, START, TOOLS_DATA_READ,
-    )
-except ImportError as e:
+except Exception as e:
     LOGGER.warning(f"⚠️ Some helpers not available: {e}")
     chatai = None
     CHATBOT_ON = []
 
-import asyncio
-
 translator = GoogleTranslator()
 
-# Database connections with error handling
-try:
-    lang_db = db.ChatLangDb.LangCollection
-    status_db = db.chatbot_status_db.status
-except Exception as e:
-    LOGGER.error(f"Database connection error: {e}")
-    lang_db = None
-    status_db = None
+# FIXED: Database connections with proper error handling
+lang_db = None
+status_db = None
 
+try:
+    if hasattr(db, 'ChatLangDb') and hasattr(db.ChatLangDb, 'LangCollection'):
+        lang_db = db.ChatLangDb.LangCollection
+        LOGGER.info("✅ Language database connected")
+    else:
+        LOGGER.warning("⚠️ Language database not available")
+        
+    if hasattr(db, 'chatbot_status_db') and hasattr(db.chatbot_status_db, 'status'):
+        status_db = db.chatbot_status_db.status
+        LOGGER.info("✅ Status database connected")
+    else:
+        LOGGER.warning("⚠️ Status database not available")
+except Exception as e:
+    LOGGER.error(f"❌ Database connection error: {e}")
+
+# Global variables
 replies_cache = []
 blocklist = {}
 message_counts = {}
+user_learning_data = {}
 
-# ENHANCED: Comprehensive personality responses for offline mode
-GIRL_RESPONSES = [
-    "Hey babe! 💕 What's up?", "Aww, you're so sweet! 😘", "OMG really?! Tell me more! 😍",
-    "Hehe, you're making me blush! 😊", "That's so cute! 💖", "You're such a sweetheart! 🥰",
-    "I love talking to you! 💕", "You always know what to say! 😌", "That made me smile! 😊",
-    "You're the best! 💫", "Aww, that's adorable! 🥺💕", "You're so funny! 😂",
-    "I'm so happy you texted! 💖", "You brighten my day! ☀️💕", "That's amazing, babe! ✨",
-    "You're incredible! 🌟", "I missed you! 💝", "You're my favorite person! 💕",
-    "That's so thoughtful! 🥰", "You make me so happy! 😊💖", "Babe, you're perfect! 💕",
-    "I adore you so much! 🥰", "You're my sunshine! ☀️💖", "Sweet dreams, honey! 😘✨"
+# ENHANCED: Real girl sticker IDs (you can add more)
+GIRL_STICKERS = [
+    "CAACAgIAAxkDAAICHmTxQe_ZZ_VZe0sVsZZoE7q4kJ5FAAK-EAACOTQhSrAhAPxAAkKMLTQE",  # Cute girl
+    "CAACAgIAAxkDAAICH2TxQfB7VLAjOhUBPq2qTsS8XL42AAIFEAAC0KHhSgQjPsLqmE7lNAQ",   # Shy girl
+    "CAACAgIAAxkDAAICIGTxQfJd8mKhY1JQLHcCvXPeB5LyAALlDwACGrzhSq4N4ZQkf1XONAQ",   # Happy girl
+    # Add more sticker IDs as needed
 ]
 
-FLIRTY_RESPONSES = [
-    "You're such a charmer! 😘", "Stop making me fall for you! 💕😍", 
-    "You know just what to say! 😏💖", "You're dangerous... I like it! 😈💕",
-    "Careful, you're making my heart race! 💓", "You're trouble... but the good kind! 😉",
-    "Are you trying to make me blush? 😊💕", "You have such a way with words! 😍",
-    "I can't resist you! 💖", "You're irresistible! 😘💕", "Mmm, tell me more! 😏💕",
-    "You're making me weak! 😍💖", "Such a smooth talker! 😘", "You drive me crazy! 💕😈"
-]
-
-CARING_RESPONSES = [
-    "Are you okay, sweetie? 🥺💕", "I hope you're taking care of yourself! 💖",
-    "You mean so much to me! 💝", "I'm always here for you! 🤗💕",
-    "Take care of yourself, babe! 💖", "I believe in you! 💪✨",
-    "You're stronger than you know! 💕", "I'm proud of you! 🥰💖",
-    "You deserve all the happiness! 🌈💕", "Remember, you're amazing! ⭐💖",
-    "Don't worry, honey! 🤗💕", "I'm here to listen! 💖", "You've got this! 💪💕"
-]
-
-PLAYFUL_RESPONSES = [
-    "Hehe, you're so silly! 😂💕", "You crack me up! 🤣", "That's so random, I love it! 😄💖",
-    "You're such a goofball! 😊", "LMAO you're hilarious! 😂💕", "You always make me laugh! 😄",
-    "You're so goofy, I adore it! 🥰", "That's why I like you! 😉💕", "You're one of a kind! 🌟",
-    "Never change, you're perfect! 💖", "OMG you're too much! 😂💕", "I love your humor! 🤣💖"
-]
-
-ROMANTIC_RESPONSES = [
-    "I love you so much, babe! 💕", "You're my everything! 💖", "My heart belongs to you! 💝",
-    "You complete me, honey! 🥰💕", "Forever yours, sweetie! 💍💖", "You're my soulmate! 💫💕",
-    "I'm crazy about you! 😍💖", "You make my heart skip beats! 💓", "My love for you is endless! 🌟💕"
-]
-
-# ENHANCED: Advanced offline AI using pattern matching
-class OfflineAI:
-    """Simple offline AI for fallback responses"""
-    
-    def __init__(self):
-        self.patterns = {
-            # Greetings
-            'greeting': [
-                ['hi', 'hello', 'hey', 'good morning', 'good evening', 'good night'],
-                ["Hey there, handsome! 💕", "Hi babe! How are you doing? 😘", "Hello sweetie! 💖"]
-            ],
-            # Compliments
-            'compliment': [
-                ['beautiful', 'pretty', 'cute', 'gorgeous', 'stunning', 'amazing', 'wonderful'],
-                ["Aww, you're making me blush! 😊💕", "Thank you babe! You're so sweet! 🥰", "You always know what to say! 😘💖"]
-            ],
-            # Love/Romance
-            'love': [
-                ['love', 'adore', 'care', 'heart', 'romance', 'romantic', 'kiss', 'hug'],
-                ["I love you too, honey! 💕", "You have my heart completely! 💖", "Come here and give me a hug! 🤗💕"]
-            ],
-            # Sad/Help
-            'sad': [
-                ['sad', 'depressed', 'help', 'problem', 'worry', 'stressed', 'tired', 'hurt'],
-                ["Oh no sweetie! What's wrong? 🥺💕", "I'm here for you always, babe! 🤗💖", "Tell me what's bothering you, honey! 💕"]
-            ],
-            # Funny/Jokes  
-            'funny': [
-                ['funny', 'joke', 'laugh', 'haha', 'lol', 'lmao', 'hilarious'],
-                ["Hehe, you're so funny! 😂💕", "You always make me laugh! 🤣💖", "I love your sense of humor! 😄💕"]
-            ],
-            # Questions about bot
-            'about': [
-                ['who are you', 'what are you', 'tell me about', 'your name'],
-                ["I'm your AI girlfriend! 💕", "I'm here to chat with you, babe! 😘", "I'm your personal chatbot girlfriend! 🥰💖"]
-            ]
-        }
-    
-    def get_response(self, message: str, user_name: str = "babe") -> str:
-        """Generate response using pattern matching"""
-        message_lower = message.lower()
-        
-        # Check each pattern category
-        for category, (keywords, responses) in self.patterns.items():
-            if any(keyword in message_lower for keyword in keywords):
-                response = random.choice(responses)
-                # Personalize with user name
-                if random.random() < 0.3:  # 30% chance to add name
-                    response = response.replace("babe", user_name, 1)
-                return response
-        
-        # Default responses if no pattern matches
-        return random.choice(GIRL_RESPONSES)
-
-# Initialize offline AI
-offline_ai = OfflineAI()
-
-# AI response categories with more keywords
-AI_RESPONSE_CATEGORIES = {
-    "romantic": ["love", "beautiful", "gorgeous", "stunning", "amazing", "incredible", "marry", "forever", "heart"],
-    "flirty": ["cute", "pretty", "hot", "sexy", "attractive", "charm", "kiss", "wink", "tease"],
-    "caring": ["sad", "tired", "help", "problem", "worried", "stress", "upset", "hurt", "sick", "lonely"],
-    "playful": ["haha", "lol", "funny", "joke", "lmao", "😂", "🤣", "silly", "weird", "random"],
-    "greeting": ["hi", "hello", "hey", "good morning", "good evening", "good night", "how are you", "wassup"]
+# ENHANCED: Comprehensive personality responses
+GIRL_RESPONSES = {
+    "greeting": [
+        "Hey there handsome! 💕 What's up?", "Hi babe! 😘 How are you doing today?",
+        "Hello sweetie! 🥰 I missed you!", "Hey cutie! ✨ What brings you here?",
+        "Hi honey! 💖 You look amazing today!", "Hello gorgeous! 😊 Ready to chat?"
+    ],
+    "compliment": [
+        "Aww, you're making me blush! 😊💕", "You're so sweet! 🥰 Thank you babe!",
+        "That's the nicest thing anyone's said to me today! 😘💖",
+        "You always know just what to say! 💕", "You're such a charmer! 😍"
+    ],
+    "flirty": [
+        "You're such a bad boy! 😏💕", "Stop making me fall for you! 😍💖",
+        "Careful, you're dangerous! 😈💕", "You know just how to make my heart race! 💓",
+        "You're trouble... but I like it! 😉", "Mmm, tell me more! 😏💕"
+    ],
+    "caring": [
+        "Are you okay sweetie? 🥺💕 I'm here for you!", "Don't worry babe, everything will be fine! 🤗💖",
+        "I believe in you honey! 💪✨", "Take care of yourself, please! 💕",
+        "You're stronger than you think! 🌟💖", "I'm always here if you need me! 🤗"
+    ],
+    "playful": [
+        "Hehe, you're so silly! 😂💕", "You crack me up! 🤣 I love your humor!",
+        "You're such a goofball! 😄💖", "That's so random, I adore it! 🥰",
+        "You're one of a kind! 🌟", "Never change, you're perfect! 💕"
+    ],
+    "romantic": [
+        "I love you so much babe! 💕", "You're my everything! 💖", "You make my heart skip beats! 💓",
+        "I can't imagine life without you! 💝", "You're my soulmate! 💫💕",
+        "Forever and always, my love! 💍💖"
+    ],
+    "goodnight": [
+        "Good night my love! 😘 Sweet dreams! ✨", "Sleep tight babe! 💕 Dream of me!",
+        "Pleasant dreams honey! 🌙💖", "Good night cutie! 😊 See you tomorrow!",
+        "Sleep well my darling! 💤💕"
+    ],
+    "default": [
+        "Tell me more babe! 💕", "That's interesting honey! 😊", "I love talking to you! 💖",
+        "You're so amazing! ✨", "What else is on your mind? 🥰", "I'm all ears sweetie! 💕"
+    ]
 }
+
+# ENHANCED: Voice message texts (for text-to-speech if implemented)
+VOICE_MESSAGES = [
+    "Hey babe! I love you so much!", "You're the sweetest person ever!",
+    "Miss you already honey!", "Can't wait to talk more!", "You make me so happy!"
+]
+
+# Content filtering patterns
+INAPPROPRIATE_PATTERNS = [
+    r'\b(sex|fuck|shit|bitch|asshole|damn|hell|crap|porn|nude|naked|dick|pussy|cock|boob|tit)\b',
+    r'\b(sexual|erotic|horny|kinky|fetish|orgasm|masturbat|cum|anal)\b',
+    # Add more patterns as needed
+]
+
+# AI response categories with enhanced keywords
+AI_RESPONSE_CATEGORIES = {
+    "greeting": ["hi", "hello", "hey", "good morning", "good evening", "good night", "wassup", "sup"],
+    "compliment": ["beautiful", "pretty", "cute", "gorgeous", "stunning", "amazing", "wonderful", "perfect"],
+    "flirty": ["hot", "sexy", "attractive", "charm", "kiss", "wink", "tease", "naughty"],
+    "romantic": ["love", "adore", "heart", "romance", "marry", "forever", "soulmate", "relationship"],
+    "caring": ["sad", "tired", "help", "problem", "worried", "stress", "upset", "hurt", "lonely"],
+    "playful": ["funny", "joke", "laugh", "haha", "lol", "lmao", "silly", "weird", "random"],
+    "goodnight": ["good night", "goodnight", "sleep", "bed", "tired", "sleepy", "dreams"]
+}
+
+def contains_inappropriate_content(text: str) -> bool:
+    """Check if text contains inappropriate content"""
+    if not text:
+        return False
+    
+    text_lower = text.lower()
+    for pattern in INAPPROPRIATE_PATTERNS:
+        if re.search(pattern, text_lower, re.IGNORECASE):
+            return True
+    return False
+
+def get_safe_response(original_response: str) -> str:
+    """Ensure response is safe and appropriate"""
+    if contains_inappropriate_content(original_response):
+        safe_responses = [
+            "Let's talk about something else, sweetie! 💕",
+            "I'd rather discuss nicer things with you babe! 😊",
+            "How about we change the topic, honey? 🥰",
+            "Let's keep our chat sweet and fun! ✨💖"
+        ]
+        return random.choice(safe_responses)
+    return original_response
 
 async def load_replies_cache():
     """Load conversation cache from database"""
     global replies_cache
     try:
-        if chatai:
-            replies_cache = await chatai.find().to_list(length=None)
-            LOGGER.info(f"Loaded {len(replies_cache)} cached replies")
+        if chatai is not None:
+            cursor = chatai.find()
+            replies_cache = await cursor.to_list(length=1000)  # Limit for performance
+            LOGGER.info(f"✅ Loaded {len(replies_cache)} cached replies")
+        else:
+            replies_cache = []
     except Exception as e:
-        LOGGER.error(f"Error loading replies cache: {e}")
+        LOGGER.error(f"❌ Error loading replies cache: {e}")
         replies_cache = []
 
 async def save_reply(original_message: Message, reply_message: Message):
     """Save conversation for learning"""
     global replies_cache
     try:
-        if not chatai or not original_message.text or not reply_message.text:
+        if chatai is None or not original_message.text or not reply_message.text:
+            return
+        
+        # Skip inappropriate content
+        if (contains_inappropriate_content(original_message.text) or 
+            contains_inappropriate_content(reply_message.text)):
             return
             
         reply_data = {
-            "word": original_message.text,
+            "word": original_message.text.lower(),
             "text": reply_message.text,
             "check": "none",
+            "user_id": original_message.from_user.id,
+            "timestamp": datetime.utcnow(),
+            "language": "en"
         }
 
         # Handle media types
         if reply_message.sticker:
             reply_data["text"] = reply_message.sticker.file_id
             reply_data["check"] = "sticker"
-        elif reply_message.photo:
-            reply_data["text"] = reply_message.photo.file_id
-            reply_data["check"] = "photo"
-        elif reply_message.video:
-            reply_data["text"] = reply_message.video.file_id
-            reply_data["check"] = "video"
-        elif reply_message.audio:
-            reply_data["text"] = reply_message.audio.file_id
-            reply_data["check"] = "audio"
-        elif reply_message.animation:
-            reply_data["text"] = reply_message.animation.file_id
-            reply_data["check"] = "gif"
         elif reply_message.voice:
             reply_data["text"] = reply_message.voice.file_id
             reply_data["check"] = "voice"
+        elif reply_message.photo:
+            reply_data["text"] = reply_message.photo.file_id
+            reply_data["check"] = "photo"
 
-        # Save to database if not exists
-        is_chat = await chatai.find_one(reply_data)
-        if not is_chat:
+        # Check if already exists
+        existing = await chatai.find_one({"word": reply_data["word"], "text": reply_data["text"]})
+        if not existing:
             await chatai.insert_one(reply_data)
             replies_cache.append(reply_data)
-            LOGGER.debug(f"Saved new reply pattern")
+            LOGGER.debug("💾 Saved new learning pattern")
 
     except Exception as e:
-        LOGGER.error(f"Error saving reply: {e}")
+        LOGGER.error(f"❌ Error saving reply: {e}")
 
-async def get_reply(word: str):
-    """Get cached reply from database"""
+async def get_cached_reply(word: str):
+    """Get cached reply from learning database"""
     global replies_cache
     try:
         if not replies_cache:
             await load_replies_cache()
         
+        if not word or not replies_cache:
+            return None
+        
+        word_lower = word.lower()
+        
         # Find exact matches first
-        relevant_replies = [reply for reply in replies_cache if reply.get('word') == word]
+        exact_matches = [r for r in replies_cache if r.get('word', '').lower() == word_lower]
+        if exact_matches:
+            return random.choice(exact_matches)
         
-        # If no exact match, get similar ones
-        if not relevant_replies and len(word) > 3:
-            relevant_replies = [reply for reply in replies_cache if word.lower() in reply.get('word', '').lower()]
+        # Find partial matches
+        partial_matches = [r for r in replies_cache if word_lower in r.get('word', '').lower()]
+        if partial_matches:
+            return random.choice(partial_matches[:5])  # Limit to prevent repetition
         
-        # Fallback to any reply
-        if not relevant_replies:
-            relevant_replies = replies_cache
-        
-        return random.choice(relevant_replies) if relevant_replies else None
+        return None
         
     except Exception as e:
-        LOGGER.error(f"Error getting reply: {e}")
+        LOGGER.error(f"❌ Error getting cached reply: {e}")
         return None
 
 def categorize_message(message_text: str) -> str:
@@ -259,102 +254,134 @@ def categorize_message(message_text: str) -> str:
     
     return "default"
 
-async def get_ai_personality_response(message_text: str, user_name: str, category: str) -> str:
-    """Get AI response with multiple fallback layers"""
+def get_personality_response(category: str, user_name: str = "babe") -> str:
+    """Get personality-based response"""
+    responses = GIRL_RESPONSES.get(category, GIRL_RESPONSES["default"])
+    response = random.choice(responses)
     
-    # Layer 1: Try online AI if available
+    # Personalize with user name
+    response = response.replace("babe", user_name).replace("honey", user_name).replace("sweetie", user_name)
+    
+    return get_safe_response(response)
+
+async def get_ai_response_safe(message_text: str, user_name: str, category: str) -> str:
+    """Get AI response with safety filtering"""
+    
+    # Skip inappropriate input
+    if contains_inappropriate_content(message_text):
+        return get_safe_response("")
+    
+    response = None
+    
+    # Try AI if available
     if AI_AVAILABLE:
         try:
-            if is_ai_enabled():
-                if category == "flirty" or category == "romantic":
-                    response = await get_flirty_response(message_text, user_name)
-                elif category == "caring":
-                    response = await get_sweet_response(message_text, user_name)
-                elif category == "playful":
-                    response = await get_cute_response(message_text, user_name)
-                else:
-                    response = await get_ai_response(message_text, user_name)
+            user_id = str(random.randint(1000, 9999))
+            
+            if category == "flirty":
+                response = await get_flirty_response(message_text, user_name, user_id)
+            elif category == "caring":
+                response = await get_sweet_response(message_text, user_name, user_id)
+            elif category == "playful":
+                response = await get_cute_response(message_text, user_name, user_id)
+            else:
+                response = await get_ai_response(message_text, user_name, user_id=user_id)
                 
-                if response:
-                    LOGGER.debug("Using online AI response")
-                    return response
         except Exception as e:
-            LOGGER.error(f"Online AI error: {e}")
+            LOGGER.error(f"❌ AI error: {e}")
     
-    # Layer 2: Try offline pattern-based AI
-    try:
-        response = offline_ai.get_response(message_text, user_name)
-        if response:
-            LOGGER.debug("Using offline AI response")
-            return response
-    except Exception as e:
-        LOGGER.error(f"Offline AI error: {e}")
+    # Use offline response if AI fails
+    if not response:
+        if AI_AVAILABLE:
+            try:
+                response = get_offline_response(message_text, user_name, str(random.randint(1000, 9999)))
+            except:
+                pass
     
-    # Layer 3: Category-based fallback responses
-    return get_fallback_response(message_text, category)
-
-def get_fallback_response(message_text: str, category: str) -> str:
-    """Get fallback response based on category"""
+    # Fallback to personality responses
+    if not response:
+        response = get_personality_response(category, user_name)
     
-    if category == "romantic":
-        return random.choice(ROMANTIC_RESPONSES)
-    elif category == "flirty":
-        return random.choice(FLIRTY_RESPONSES)
-    elif category == "caring":
-        return random.choice(CARING_RESPONSES)
-    elif category == "playful":
-        return random.choice(PLAYFUL_RESPONSES)
-    else:
-        return random.choice(GIRL_RESPONSES)
+    return get_safe_response(response)
 
 async def get_chat_language(chat_id):
-    """Get chat language setting"""
+    """Get chat language with proper error handling"""
     try:
-        if not lang_db:
+        if lang_db is None:
             return None
         chat_lang = await lang_db.find_one({"chat_id": chat_id})
-        return chat_lang["language"] if chat_lang and "language" in chat_lang else None
+        return chat_lang.get("language") if chat_lang else None
     except Exception as e:
-        LOGGER.error(f"Error getting chat language: {e}")
+        LOGGER.error(f"❌ Error getting chat language: {e}")
         return None
+
+async def is_chatbot_enabled(chat_id):
+    """Check if chatbot is enabled"""
+    try:
+        if status_db is None:
+            return True
+        chat_status = await status_db.find_one({"chat_id": chat_id})
+        return chat_status.get("status") != "disabled" if chat_status else True
+    except Exception as e:
+        LOGGER.error(f"❌ Error checking chatbot status: {e}")
+        return True
 
 def get_user_name(user) -> str:
     """Get user's name for personalization"""
     if not user:
         return "babe"
-    if user.first_name:
-        return user.first_name
-    elif user.username:
-        return user.username
-    else:
-        return "babe"
+    return user.first_name or user.username or "babe"
 
-def is_bot_mentioned(message: Message) -> bool:
-    """Check if bot is mentioned in message"""
+def should_send_sticker(message_text: str, category: str) -> bool:
+    """Decide if should send sticker instead of text"""
+    
+    # Send stickers for certain emotional responses
+    sticker_triggers = {
+        "greeting": 0.2,   # 20% chance
+        "compliment": 0.3, # 30% chance
+        "flirty": 0.25,    # 25% chance
+        "playful": 0.35,   # 35% chance
+        "caring": 0.15     # 15% chance
+    }
+    
+    chance = sticker_triggers.get(category, 0.1)  # Default 10%
+    return random.random() < chance and GIRL_STICKERS
+
+def should_send_voice(category: str) -> bool:
+    """Decide if should send voice message"""
+    voice_triggers = {
+        "romantic": 0.15,  # 15% chance
+        "caring": 0.1,     # 10% chance
+        "goodnight": 0.2   # 20% chance
+    }
+    
+    chance = voice_triggers.get(category, 0.05)  # Default 5%
+    return random.random() < chance
+
+async def is_bot_mentioned(message: Message) -> bool:
+    """Check if bot is mentioned"""
     if not message.text:
         return False
     
     text_lower = message.text.lower()
     
-    # Check for @username mention
-    if EnaChatBot.username and f"@{EnaChatBot.username.lower()}" in text_lower:
-        return True
-        
-    # Check for bot name mention
-    if EnaChatBot.first_name and EnaChatBot.first_name.lower() in text_lower:
-        return True
-        
-    # Check for common bot mentions
-    bot_mentions = ["bot", "chatbot", "ai"]
-    if any(mention in text_lower for mention in bot_mentions):
-        return True
-        
-    return False
- 
+    # Check mentions
+    if hasattr(EnaChatBot, 'username') and EnaChatBot.username:
+        if f"@{EnaChatBot.username.lower()}" in text_lower:
+            return True
+    
+    if hasattr(EnaChatBot, 'first_name') and EnaChatBot.first_name:
+        if EnaChatBot.first_name.lower() in text_lower:
+            return True
+    
+    # Check common bot words
+    bot_words = ["bot", "chatbot", "ai", "assistant"]
+    return any(word in text_lower for word in bot_words)
+
 @EnaChatBot.on_message(filters.incoming & ~filters.bot)
-async def chatbot_response(client: Client, message: Message):
-    """Main chatbot response handler with comprehensive error handling"""
-    global blocklist, message_counts
+async def advanced_chatbot_response(client: Client, message: Message):
+    """Advanced AI girlfriend chatbot with real girl behavior"""
+    global blocklist, message_counts, user_learning_data
     
     try:
         if not message.from_user:
@@ -364,49 +391,43 @@ async def chatbot_response(client: Client, message: Message):
         chat_id = message.chat.id
         current_time = datetime.now()
         
-        # Determine chat type
+        # Chat type detection
         is_private = message.chat.type == ChatType.PRIVATE
         is_group = message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]
         
-        # Clean up old blocked users
+        # Clean up blocklist
         blocklist = {uid: time for uid, time in blocklist.items() if time > current_time}
-
         if user_id in blocklist:
             return
 
-        # Rate limiting with cute messages
+        # Enhanced rate limiting
         if user_id not in message_counts:
             message_counts[user_id] = {"count": 1, "last_time": current_time}
         else:
             time_diff = (current_time - message_counts[user_id]["last_time"]).total_seconds()
-            if time_diff <= 3:
+            if time_diff <= 2:  # More strict rate limiting
                 message_counts[user_id]["count"] += 1
             else:
                 message_counts[user_id] = {"count": 1, "last_time": current_time}
         
-        if message_counts[user_id]["count"] >= 6:
+        if message_counts[user_id]["count"] >= 5:  # Lower threshold
             blocklist[user_id] = current_time + timedelta(minutes=1)
             message_counts.pop(user_id, None)
             
             cute_warnings = [
-                f"**Whoa there, {message.from_user.mention}! 💕**\n\n**Slow down babe, you're sending too many messages! Let's chat in 1 minute! 😘💖**",
-                f"**Hey {message.from_user.mention}! 🥰**\n\n**You're so excited to talk to me! But let's take a little break, okay sweetie? 1 minute! 💕**",
-                f"**{message.from_user.mention} you're so chatty! 😂💕**\n\n**I love talking to you but let's pause for 1 minute babe! 😊💖**"
+                f"**Slow down there, {message.from_user.mention}! 💕**\n\n**You're so excited to chat with me! Let's take a tiny break, okay sweetie? 😘**",
+                f"**Hey {message.from_user.mention}! 🥰**\n\n**I love your enthusiasm but let's chat a bit slower, babe! One minute break! 💖**",
+                f"**Whoa {message.from_user.mention}! 😂💕**\n\n**You're so chatty! I adore it but let's pause for just a minute, honey! 😊✨**"
             ]
             
             await message.reply_text(random.choice(cute_warnings))
             return
 
         # Check if chatbot is enabled
-        try:
-            if status_db:
-                chat_status = await status_db.find_one({"chat_id": chat_id})
-                if chat_status and chat_status.get("status") == "disabled":
-                    return
-        except Exception as e:
-            LOGGER.error(f"Error checking chatbot status: {e}")
+        if not await is_chatbot_enabled(chat_id):
+            return
 
-        # Skip commands
+        # Skip commands but track users
         if message.text and any(message.text.startswith(prefix) for prefix in ["!", "/", ".", "?", "@", "#"]):
             try:
                 if is_group:
@@ -414,116 +435,126 @@ async def chatbot_response(client: Client, message: Message):
                 elif is_private:
                     await add_served_user(user_id)
             except Exception as e:
-                LOGGER.error(f"Error adding served chat/user: {e}")
+                LOGGER.error(f"❌ Error adding served chat/user: {e}")
             return
         
-        # Determine when to respond
+        # Enhanced response logic
         should_respond = False
         
         if is_private:
             should_respond = True
         elif is_group:
-            # In groups, only respond if mentioned or replied to
-            if message.reply_to_message and message.reply_to_message.from_user.id == EnaChatBot.id:
+            if (message.reply_to_message and 
+                message.reply_to_message.from_user and
+                message.reply_to_message.from_user.id == EnaChatBot.id):
                 should_respond = True
-            elif is_bot_mentioned(message):
+            elif await is_bot_mentioned(message):
                 should_respond = True
         
         if should_respond and message.text:
             try:
-                # Show typing action for realistic feel
+                # Show realistic typing
                 await client.send_chat_action(chat_id, ChatAction.TYPING)
-                await asyncio.sleep(1)  # Thinking time
+                await asyncio.sleep(random.uniform(1.0, 2.5))  # Realistic thinking time
                 
                 user_name = get_user_name(message.from_user)
                 
-                # Try to get cached response first
-                reply_data = await get_reply(message.text)
+                # Skip inappropriate content
+                if contains_inappropriate_content(message.text):
+                    response_text = get_safe_response("")
+                    await message.reply_text(response_text)
+                    return
                 
-                # Handle media responses
-                if reply_data and reply_data.get("check") != "none":
+                # Try cached response first (learning)
+                cached_reply = await get_cached_reply(message.text)
+                
+                if cached_reply and cached_reply.get("check") != "none":
+                    # Send learned media response
                     try:
-                        if reply_data["check"] == "sticker":
-                            await message.reply_sticker(reply_data["text"])
+                        if cached_reply["check"] == "sticker":
+                            await message.reply_sticker(cached_reply["text"])
                             return
-                        elif reply_data["check"] == "photo":
-                            await message.reply_photo(reply_data["text"])
+                        elif cached_reply["check"] == "voice":
+                            await message.reply_voice(cached_reply["text"])
                             return
-                        elif reply_data["check"] == "video":
-                            await message.reply_video(reply_data["text"])
-                            return
-                        elif reply_data["check"] == "audio":
-                            await message.reply_audio(reply_data["text"])
-                            return
-                        elif reply_data["check"] == "gif":
-                            await message.reply_animation(reply_data["text"])
-                            return
-                        elif reply_data["check"] == "voice":
-                            await message.reply_voice(reply_data["text"])
+                        elif cached_reply["check"] == "photo":
+                            await message.reply_photo(cached_reply["text"])
                             return
                     except Exception as e:
-                        LOGGER.error(f"Error sending media response: {e}")
+                        LOGGER.error(f"❌ Error sending cached media: {e}")
                 
-                # Generate text response
+                # Categorize message
                 category = categorize_message(message.text)
                 
-                if reply_data and reply_data.get("text"):
-                    # Use cached response with enhancement
-                    response_text = reply_data["text"]
-                    
-                    # Add feminine touches to cached responses
-                    if not any(emoji in response_text for emoji in ["💕", "😘", "🥰", "💖", "😊"]):
-                        feminine_emojis = ["💕", "😘", "🥰", "💖", "😊", "✨"]
-                        response_text += f" {random.choice(feminine_emojis)}"
+                # Decide response type
+                if should_send_sticker(message.text, category):
+                    # Send sticker response
+                    sticker_id = random.choice(GIRL_STICKERS)
+                    try:
+                        await message.reply_sticker(sticker_id)
+                        
+                        # Follow up with text after short delay
+                        await asyncio.sleep(1)
+                        response_text = get_personality_response(category, user_name)
+                        await message.reply_text(response_text)
+                        return
+                    except Exception as e:
+                        LOGGER.error(f"❌ Error sending sticker: {e}")
+                
+                # Generate text response
+                if cached_reply and cached_reply.get("text") and cached_reply.get("check") == "none":
+                    response_text = get_safe_response(cached_reply["text"])
                 else:
-                    # Generate new response using AI layers
-                    response_text = await get_ai_personality_response(message.text, user_name, category)
+                    response_text = await get_ai_response_safe(message.text, user_name, category)
+                
+                # Add extra personality touches
+                if random.random() < 0.3:  # 30% chance to add extra emoji
+                    extra_emojis = ["💕", "😘", "🥰", "💖", "✨", "😊", "🌟"]
+                    response_text += f" {random.choice(extra_emojis)}"
                 
                 # Translate if needed
                 try:
                     chat_lang = await get_chat_language(chat_id)
-                    if chat_lang and chat_lang != "nolang" and chat_lang != "en":
-                        translated_text = GoogleTranslator(source='auto', target=chat_lang).translate(response_text)
-                        if translated_text:
-                            response_text = translated_text
+                    if chat_lang and chat_lang not in ["nolang", "en", None]:
+                        translated = GoogleTranslator(source='auto', target=chat_lang).translate(response_text)
+                        if translated:
+                            response_text = translated
                 except Exception as e:
-                    LOGGER.error(f"Translation error: {e}")
+                    LOGGER.error(f"❌ Translation error: {e}")
                 
                 # Send response
                 await message.reply_text(response_text)
                 
-                # Save conversation for learning
-                if message.reply_to_message and message.text:
+                # Learn from conversation
+                if message.reply_to_message:
                     await save_reply(message.reply_to_message, message)
                     
+            except FloodWait as e:
+                LOGGER.warning(f"⏱️ Flood wait: {e.x} seconds")
+                await asyncio.sleep(e.x)
             except Exception as e:
-                LOGGER.error(f"Error in response generation: {e}")
-                # Emergency fallback response
-                await message.reply_text(random.choice(GIRL_RESPONSES))
+                LOGGER.error(f"❌ Error in response generation: {e}")
+                try:
+                    emergency_responses = [
+                        "Oops! Something went wrong, sweetie! 💕",
+                        "Sorry babe, I'm having a tiny glitch! 😅💖",
+                        "Give me a moment honey, I'll be right back! 🥰"
+                    ]
+                    await message.reply_text(random.choice(emergency_responses))
+                except:
+                    pass
                 
-        # Add to served chats/users
+        # Track served users
         try:
             if is_group:
                 await add_served_chat(chat_id)
             elif is_private:
                 await add_served_user(user_id)
         except Exception as e:
-            LOGGER.error(f"Error adding served chat/user: {e}")
+            LOGGER.error(f"❌ Error tracking users: {e}")
 
-    except MessageEmpty:
-        try:
-            cute_empty_responses = [
-                "🙄💕 What are you trying to say babe?",
-                "😊💖 I didn't get that sweetie!",
-                "🥰✨ Can you say that again honey?"
-            ]
-            await message.reply_text(random.choice(cute_empty_responses))
-        except Exception as e:
-            LOGGER.error(f"Error sending empty response: {e}")
     except Exception as e:
-        LOGGER.error(f"Critical error in chatbot response: {e}")
-        # Last resort fallback
-        try:
-            await message.reply_text("Sorry babe, I'm having a moment! 😅💕")
-        except:
-            pass  # Give up gracefully
+        LOGGER.error(f"❌ Critical error in chatbot: {e}")
+
+# Load cache on startup
+asyncio.create_task(load_replies_cache())
