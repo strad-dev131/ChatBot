@@ -193,7 +193,7 @@ python3 main.py
 
 ---
 
-## 📱 Screenshots
+## 📱 𝐏𝐑𝐎𝐅𝐈𝐋𝐄
 
 <div align="center">
   <img src="https://files.catbox.moe/5gwv0a.jpg" alt="Bot Dp">
