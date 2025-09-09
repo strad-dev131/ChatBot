@@ -152,5 +152,7 @@ def get_readable_time(seconds: int) -> str:
 
 # ---------------- INIT OBJECTS ---------------- #
 
-EnaChatBot = EnaChatBot()
-userbot = EnaChatBot()  # Changed Userbot() to EnaChatBot() to fix the error
+EnaChatBot = EnaChatBot  # Fix to avoid TypeError
+userbot = EnaChatBot()   # Initialize the instance correctly later
+
+
