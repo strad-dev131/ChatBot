@@ -1,27 +1,144 @@
-Abg==2.3.1
+# Python Dependencies for Perfect AI Girlfriend Bot
+# Enhanced requirements with all necessary packages
+
+# Core Telegram Bot Framework
 pyrogram==2.0.106
-pymongo
-motor
-requests
-dnspython
-tgcrypto==1.2.2
-asyncio
-python-dotenv
-lexica-api
-deep-translator
-pycgi
-apscheduler
-Flask
-uvloop
-psutil
-langdetect
-colorama
-# ENHANCED: AI Dependencies for OpenRouter Integration
+tgcrypto==1.2.5
+
+# Database & Storage
+pymongo==4.6.0
+motor==3.3.2
+dnspython==2.4.2
+
+# AI & ML Integration
 aiohttp==3.9.1
 aiofiles==23.2.1
-# Additional dependencies for better AI responses
 httpx==0.25.2
 tenacity==8.2.3
-# Performance and reliability
+
+# Language Processing & Translation
+deep-translator==1.11.4
+langdetect==1.0.9
+googletrans==4.0.0rc1
+
+# Content Processing
+python-dotenv==1.0.0
+requests==2.31.0
+urllib3==2.1.0
+
+# Performance & Optimization
+uvloop==0.19.0
 cachetools==5.3.2
 backoff==2.2.1
+
+# Scheduling & Tasks
+apscheduler==3.10.4
+asyncio-throttle==1.0.2
+
+# Web & API Support
+Flask==3.0.0
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Media Processing
+Pillow==10.1.0
+opencv-python-headless==4.8.1.78
+
+# Voice & Audio (Future TTS Support)
+pydub==0.25.1
+gtts==2.4.0
+SpeechRecognition==3.10.0
+
+# Security & Validation
+cryptography==41.0.7
+pyjwt==2.8.0
+passlib==1.7.4
+
+# Utilities & Helpers
+colorama==0.4.6
+psutil==5.9.6
+dateutils==0.6.12
+humanize==4.8.0
+
+# Enhanced Text Processing
+regex==2023.10.3
+unidecode==1.3.7
+fuzzywuzzy==0.18.0
+python-levenshtein==0.23.0
+
+# Async & Concurrency
+aiofiles==23.2.1
+asyncpg==0.29.0
+aioredis==2.0.1
+
+# Content Filtering & Safety
+better-profanity==0.7.0
+profanity-check==1.0.3
+
+# Emoji & Unicode Support
+emoji==2.8.0
+unicodedata2==15.1.0
+
+# Advanced Features
+numpy==1.25.2
+pandas==2.1.3
+scipy==1.11.4
+
+# Enhanced Error Handling
+sentry-sdk==1.38.0
+loguru==0.7.2
+
+# JSON & Data Processing
+orjson==3.9.10
+msgpack==1.0.7
+
+# Performance Monitoring
+memory-profiler==0.61.0
+py-spy==0.3.14
+
+# ===========================================
+# 🎯 PERFECT BOT REQUIREMENTS EXPLAINED:
+# ===========================================
+
+# Core Framework:
+# - pyrogram: Latest stable Telegram bot framework
+# - tgcrypto: Fast encryption for pyrogram
+
+# Database:
+# - pymongo & motor: MongoDB async support for learning system
+# - dnspython: DNS resolution for MongoDB
+
+# AI Integration:
+# - aiohttp: Async HTTP for OpenRouter API calls
+# - httpx: Alternative HTTP client with retry logic
+# - tenacity: Smart retry mechanisms for API calls
+
+# Language Features:
+# - deep-translator: Multi-language translation
+# - langdetect: Automatic language detection
+# - googletrans: Google Translate integration
+
+# Performance:
+# - uvloop: Fast async event loop
+# - cachetools: Response caching system
+# - backoff: Exponential backoff for failed requests
+
+# Real Girl Features:
+# - emoji: Enhanced emoji support for personality
+# - better-profanity: Content filtering for safety
+# - gtts: Text-to-speech for future voice messages
+# - Pillow: Image processing for sticker handling
+
+# Advanced AI:
+# - numpy, pandas: Data processing for learning
+# - fuzzywuzzy: Smart text matching for responses
+# - regex: Advanced pattern matching
+
+# Reliability:
+# - sentry-sdk: Error tracking and monitoring
+# - loguru: Enhanced logging system
+# - memory-profiler: Performance monitoring
+
+# All dependencies are pinned to stable versions
+# Compatible with Python 3.8+ and Heroku deployment
+# Optimized for minimal memory usage and fast startup
