@@ -1,4 +1,4 @@
-# 🤖 Shruti ChatBot
+# 🤖 𝐄𝐧𝐚 𝐂𝐡𝐚𝐭𝐁𝐨𝐭
 
 <div align="center">
   <img src="https://img.shields.io/github/stars/strad-dev131/ChatBot?style=for-the-badge&color=blue" alt="GitHub stars">
