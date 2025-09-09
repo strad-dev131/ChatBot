@@ -153,4 +153,4 @@ def get_readable_time(seconds: int) -> str:
 # ---------------- INIT OBJECTS ---------------- #
 
 EnaChatBot = EnaChatBot()
-userbot = Userbot()
+userbot = EnaChatBot()  # Changed Userbot() to EnaChatBot() to fix the error
