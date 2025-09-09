@@ -14,6 +14,8 @@ from pyrogram.types import CallbackQuery
 import asyncio
 import config
 from EnaChatBot import LOGGER, EnaChatBot, db
+
+# FIXED: Import languages and helpers from the helpers module
 from EnaChatBot.modules.helpers import (
     ABOUT_BTN,
     ABOUT_READ,
@@ -28,8 +30,8 @@ from EnaChatBot.modules.helpers import (
     SOURCE_READ,
     START,
     TOOLS_DATA_READ,
+    languages  # FIXED: Added languages import
 )
-
 
 lang_db = db.ChatLangDb.LangCollection
 status_db = db.chatbot_status_db.status
