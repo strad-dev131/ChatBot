@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from pyrogram import Client, filters
 from pyrogram.errors import MessageEmpty
 from datetime import datetime, timedelta
-from pyrogram.enums import ChatMemberStatus, ChatType
+from pyrogram.enums import ChatMember, ChatType
 from pyrogram.errors import UserNotParticipant
 from pyrogram.enums import ChatAction, ChatMemberStatus as CMS
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
@@ -13,14 +13,19 @@ from EnaChatBot.database.users import add_served_user
 from config import MONGO_URL
 from EnaChatBot import EnaChatBot, mongo, LOGGER, db
 
-# ENHANCED: Import AI functionality
-from EnaChatBot.openrouter_ai import (
-    get_ai_response, 
-    get_flirty_response, 
-    get_cute_response, 
-    get_sweet_response,
-    is_ai_enabled
-)
+# Import AI functionality with error handling
+try:
+    from EnaChatBot.openrouter_ai import (
+        get_ai_response, 
+        get_flirty_response, 
+        get_cute_response, 
+        get_sweet_response,
+        is_ai_enabled
+    )
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+    LOGGER.warning("AI module not available - using fallback responses")
 
 # Import helpers
 from EnaChatBot.modules.helpers import chatai, CHATBOT_ON
@@ -50,7 +55,7 @@ replies_cache = []
 blocklist = {}
 message_counts = {}
 
-# ENHANCED: More personality-driven responses with AI integration
+# Enhanced personality responses
 GIRL_RESPONSES = [
     "Hey babe! 💕 What's up?",
     "Aww, you're so sweet! 😘",
@@ -113,7 +118,7 @@ PLAYFUL_RESPONSES = [
     "Never change, you're perfect! 💖"
 ]
 
-# ENHANCED: AI-powered response categories
+# AI response categories
 AI_RESPONSE_CATEGORIES = {
     "romantic": ["love", "beautiful", "gorgeous", "stunning", "amazing", "incredible"],
     "flirty": ["cute", "pretty", "hot", "sexy", "attractive", "charm"],
@@ -175,10 +180,7 @@ async def get_reply(word: str):
     if not replies_cache:
         await load_replies_cache()
     
-    # Try to find exact match first
     relevant_replies = [reply for reply in replies_cache if reply['word'] == word]
-    
-    # If no exact match, use any random reply
     if not relevant_replies:
         relevant_replies = replies_cache
     
@@ -188,7 +190,7 @@ async def get_reply(word: str):
     return None
 
 def categorize_message(message_text: str) -> str:
-    """Categorize message to determine AI personality type"""
+    """Categorize message to determine response type"""
     text_lower = message_text.lower()
     
     for category, keywords in AI_RESPONSE_CATEGORIES.items():
@@ -200,7 +202,7 @@ def categorize_message(message_text: str) -> str:
 async def get_ai_personality_response(message_text: str, user_name: str, category: str) -> str:
     """Get AI response based on message category"""
     
-    if not is_ai_enabled():
+    if not AI_AVAILABLE or not is_ai_enabled():
         return get_fallback_response(message_text, category)
     
     try:
@@ -259,6 +261,10 @@ async def chatbot_response(client: Client, message: Message):
         chat_id = message.chat.id
         current_time = datetime.now()
         
+        # FIXED: Properly distinguish between group chats and private chats
+        is_private = message.chat.type == ChatType.PRIVATE
+        is_group = message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]
+        
         # Clean up old blocked users
         blocklist = {uid: time for uid, time in blocklist.items() if time > current_time}
 
@@ -298,20 +304,29 @@ async def chatbot_response(client: Client, message: Message):
 
         # Skip commands
         if message.text and any(message.text.startswith(prefix) for prefix in ["!", "/", ".", "?", "@", "#"]):
-            if message.chat.type in ["group", "supergroup"]:
-                return await add_served_chat(chat_id)
-            else:
-                return await add_served_user(chat_id)
+            # FIXED: Properly add served chats/users
+            if is_group:
+                await add_served_chat(chat_id)
+            elif is_private:
+                await add_served_user(user_id)  # Use user_id not chat_id for private chats
+            return
         
-        # Only respond if replied to bot or direct message
+        # FIXED: Determine when to respond in groups vs private
         should_respond = False
         
-        if message.chat.type == ChatType.PRIVATE:
+        if is_private:
             should_respond = True
-        elif message.reply_to_message and message.reply_to_message.from_user.id == EnaChatBot.id:
-            should_respond = True
-        elif EnaChatBot.username and f"@{EnaChatBot.username}" in (message.text or ""):
-            should_respond = True
+        elif is_group:
+            # In groups, only respond if:
+            # 1. Reply to bot message
+            # 2. Bot is mentioned
+            # 3. Message contains bot username
+            if message.reply_to_message and message.reply_to_message.from_user.id == EnaChatBot.id:
+                should_respond = True
+            elif EnaChatBot.username and f"@{EnaChatBot.username}" in (message.text or ""):
+                should_respond = True
+            elif EnaChatBot.first_name and EnaChatBot.first_name.lower() in (message.text or "").lower():
+                should_respond = True
         
         if should_respond and message.text:
             # Show typing action for more realistic feel
@@ -376,6 +391,12 @@ async def chatbot_response(client: Client, message: Message):
         # Save user replies for learning (only text responses)
         if message.reply_to_message and message.text:
             await save_reply(message.reply_to_message, message)
+            
+        # FIXED: Properly add served chats/users
+        if is_group:
+            await add_served_chat(chat_id)
+        elif is_private:
+            await add_served_user(user_id)  # Use user_id not chat_id
 
     except MessageEmpty:
         cute_empty_responses = [
