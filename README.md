@@ -196,7 +196,7 @@ python3 main.py
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="https://via.placeholder.com/300x500/2E3440/88C0D0?text=Bot+Screenshot" alt="Bot Screenshot">
+  <img src="https://files.catbox.moe/5gwv0a.jpg" alt="Bot Dp">
 </div>
 
 ---
