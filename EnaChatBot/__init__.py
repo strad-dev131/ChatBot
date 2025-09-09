@@ -61,7 +61,7 @@ async def load_clone_owners():
 async def save_clonebot_owner(bot_id, user_id):
     await cloneownerdb.update_one(
         {"bot_id": bot_id},
-        {"$set": {"user_id": user_id}},
+        {"$set": {"user_id": user_id}},  # Fixed missing comma here
         upsert=True
     )
 
@@ -78,7 +78,7 @@ async def delete_clone_owner(bot_id):
 async def save_idclonebot_owner(clone_id, user_id):
     await cloneownerdb.update_one(
         {"clone_id": clone_id},
-        {"$set": {"user_id": user_id}}
+        {"$set": {"user_id": user_id}},  # Fixed missing comma here
         upsert=True
     )
 
