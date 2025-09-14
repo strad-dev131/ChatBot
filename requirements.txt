@@ -1,0 +1,74 @@
+# Streamlined Requirements for Perfect AI Girlfriend Bot
+# Compatible with Python 3.8+ and Heroku deployment
+
+# Core Telegram Bot Framework
+pyrogram==2.0.106
+tgcrypto==1.2.5
+
+# Database Support
+pymongo==4.6.0
+dnspython==2.4.2
+
+# AI & HTTP Integration
+aiohttp==3.9.1
+httpx==0.25.2
+
+# Language & Translation
+deep-translator==1.11.4
+
+# Core Dependencies
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Performance
+uvloop==0.19.0; sys_platform != "win32"
+cachetools==5.3.2
+
+# Media Processing
+Pillow==10.1.0
+
+# Content Filtering
+better-profanity==0.7.0
+
+# Emoji Support
+emoji==2.8.0
+
+# Enhanced Text Processing
+regex==2023.10.3
+fuzzywuzzy==0.18.0
+
+# Async Support
+aiofiles==23.2.1
+
+# Utilities
+colorama==0.4.6
+humanize==4.8.0
+
+# JSON Processing
+orjson==3.9.10
+
+# Error Handling & Logging
+loguru==0.7.2
+
+# Audio Support (Lightweight)
+gtts==2.4.0
+
+# ===========================================
+# 🎯 HEROKU-COMPATIBLE REQUIREMENTS:
+# ===========================================
+
+# This streamlined version removes problematic packages:
+# - Removed motor (async MongoDB - using pymongo instead)
+# - Removed opencv (too heavy for basic deployment)
+# - Removed scipy/numpy/pandas (memory intensive)
+# - Removed Flask/FastAPI (not needed for Telegram bot)
+# - Removed memory profilers (deployment tools only)
+# - Removed complex audio processing packages
+# - Kept only essential packages for core functionality
+
+# All remaining packages are:
+# ✅ Heroku compatible
+# ✅ Python 3.8+ compatible
+# ✅ Lightweight and fast
+# ✅ Essential for bot functionality
+# ✅ No build wheel issues

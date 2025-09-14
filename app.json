@@ -1,0 +1,233 @@
+{
+  "name": "Perfect AI Girlfriend Bot - EnaChatBot",
+  "description": "🤖💕 Perfect AI-Powered Telegram ChatBot with Real Girl Personality - Features: Smart learning, sticker responses, content filtering, emotional intelligence, and 100% working AI models with advanced fallback systems",
+  "keywords": [
+    "telegram",
+    "bot", 
+    "chatbot",
+    "ai",
+    "girlfriend",
+    "perfect",
+    "learning",
+    "stickers",
+    "emotions",
+    "clone",
+    "openrouter",
+    "python",
+    "pyrogram",
+    "mongodb",
+    "girl",
+    "feminine",
+    "flirty",
+    "safe",
+    "content-filter"
+  ],
+  "website": "https://github.com/strd-dev131/ChatBot",
+  "repository": "https://github.com/strd-dev131/ChatBot",
+  "logo": "https://telegra.ph/file/f6d8e64246bddc26b4f66.jpg",
+  "success_url": "/",
+  "env": {
+    "API_ID": {
+      "description": "Get this value from https://my.telegram.org",
+      "value": "",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Get this value from https://my.telegram.org", 
+      "value": "",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Get bot token from @BotFather",
+      "value": "",
+      "required": true
+    },
+    "MONGO_URL": {
+      "description": "MongoDB database URL. Get free from https://cloud.mongodb.com (Required for learning and memory)",
+      "value": "",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram user ID. Get from @userinfobot",
+      "value": "",
+      "required": true
+    },
+    "OWNER_USERNAME": {
+      "description": "Your Telegram username (without @)",
+      "value": "",
+      "required": false
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "🚨 CRITICAL FOR PERFECT AI GIRLFRIEND! Get FREE API key from https://openrouter.ai/ - Enables unlimited smart conversations with real girl personality, learning, and emotional responses",
+      "value": "",
+      "required": true
+    },
+    "AI_PERSONALITY": {
+      "description": "Choose AI personality: girlfriend (loving & romantic), flirty (playful & teasing), cute (innocent & sweet), sweet (caring & gentle)",
+      "value": "girlfriend",
+      "required": false
+    },
+    "OPENROUTER_MODEL": {
+      "description": "Primary AI model. ONLY WORKING MODELS: google/gemma-2-9b-it:free (recommended), meta-llama/llama-3.2-3b-instruct:free, qwen/qwen-2-7b-instruct:free",
+      "value": "google/gemma-2-9b-it:free",
+      "required": false
+    },
+    "ENABLE_AI_CHAT": {
+      "description": "Enable AI-powered girlfriend responses (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "MAX_AI_TOKENS": {
+      "description": "Maximum tokens for AI responses (50-100). Lower = faster, Higher = more detailed",
+      "value": "80",
+      "required": false
+    },
+    "ENABLE_CONTENT_FILTER": {
+      "description": "Enable content filtering for safe, appropriate responses (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_LEARNING": {
+      "description": "Enable learning from conversations to get smarter (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_STICKERS": {
+      "description": "Enable sending cute girl stickers randomly (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "STICKER_CHANCE": {
+      "description": "Chance to send stickers instead of text (0-50). Recommended: 25",
+      "value": "25",
+      "required": false
+    },
+    "EMOJI_FREQUENCY": {
+      "description": "How many emojis to use: low, medium, high. Girls use lots of emojis!",
+      "value": "high",
+      "required": false
+    },
+    "PERSONALITY_EMOTIONS": {
+      "description": "Enable emotional intelligence and context awareness (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "CONVERSATION_MEMORY": {
+      "description": "Remember previous conversations for better context (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "SUPPORT_GRP": {
+      "description": "Support group username (without @)",
+      "value": "TeamsXchat",
+      "required": false
+    },
+    "UPDATE_CHNL": {
+      "description": "Update channel username (without @)", 
+      "value": "TeamXUpdate",
+      "required": false
+    },
+    "STRING_SESSION": {
+      "description": "Pyrogram string session for additional features (optional)",
+      "value": "",
+      "required": false
+    },
+    "LOG_GROUP_ID": {
+      "description": "Log group chat ID for bot logs (optional)",
+      "value": "",
+      "required": false
+    },
+    "TIMEZONE": {
+      "description": "Bot timezone",
+      "value": "Asia/Kolkata", 
+      "required": false
+    },
+    "DEBUG": {
+      "description": "Enable debug mode for troubleshooting (True/False)",
+      "value": "False",
+      "required": false
+    },
+    "ENABLE_CLONE_FEATURE": {
+      "description": "Enable bot cloning feature (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_BROADCAST_FEATURE": {
+      "description": "Enable broadcast messaging (True/False)",
+      "value": "True", 
+      "required": false
+    },
+    "ENABLE_CHATBOT_FEATURE": {
+      "description": "Enable main chatbot functionality (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_LANGUAGE_DETECTION": {
+      "description": "Auto-detect user language and respond accordingly (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_AUTO_TRANSLATE": {
+      "description": "Auto-translate responses to user's language (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "DEFAULT_LANGUAGE": {
+      "description": "Default bot language (en, hi, es, fr, de, it, pt, ru, ja, ko, zh)",
+      "value": "en",
+      "required": false
+    },
+    "RATE_LIMIT_MESSAGES": {
+      "description": "Rate limit: max messages per window (to prevent spam)",
+      "value": "25",
+      "required": false
+    },
+    "RATE_LIMIT_WINDOW": {
+      "description": "Rate limit window in seconds",
+      "value": "60",
+      "required": false
+    },
+    "MAX_CLONES_PER_USER": {
+      "description": "Maximum clones per user",
+      "value": "5",
+      "required": false
+    },
+    "BROADCAST_DELAY": {
+      "description": "Delay between broadcast messages (seconds)",
+      "value": "0.1",
+      "required": false
+    },
+    "SAFE_MODE": {
+      "description": "Enable family-friendly safe mode (True/False)",
+      "value": "True",
+      "required": false
+    },
+    "AUTO_MODERATE": {
+      "description": "Automatically moderate inappropriate content (True/False)",
+      "value": "True",
+      "required": false
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "stack": "heroku-22",
+  "scripts": {
+    "postdeploy": "python -c \"print('🎉 Perfect AI Girlfriend Bot deployed successfully! 💕 Your smart, learning, emotion-aware AI girlfriend is ready with stickers, content filtering, and real girl personality!')\"" 
+  },
+  "environments": {
+    "test": {
+      "scripts": {
+        "test": "python -m pytest"
+      }
+    }
+  }
+}
