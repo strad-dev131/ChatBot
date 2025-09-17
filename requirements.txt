@@ -11,7 +11,7 @@ pyrogram==2.0.106
 tgcrypto==1.2.5
 
 # AI & Language Models - MAIN UPGRADE (FREE & UNLIMITED)
-lexica-api==2.2.9          # Primary AI engine - GPT, Gemini, Bard, LLaMA, Mistral
+lexica-api                 # Primary AI engine - GPT, Gemini, Bard, LLaMA, Mistral
 kurigram==2.2.9            # Support package for lexica-api
 
 # Database Support - Enhanced
