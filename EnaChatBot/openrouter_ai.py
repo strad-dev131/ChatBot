@@ -1,5 +1,4 @@
-# Ultimate AI Girlfriend System - Enhanced openrouter_ai.py replacement
-# File: EnaChatBot/openrouter_ai.py - REPLACE EXISTING FILE
+# File: EnaChatBot/openrouter_ai.py 
 
 """
 🚀 ULTIMATE AI GIRLFRIEND SYSTEM
