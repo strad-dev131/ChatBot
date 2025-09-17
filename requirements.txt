@@ -71,7 +71,7 @@ lxml==4.9.3                # XML processing
 selenium==4.15.0           # Advanced web scraping (optional)
 
 # Indian Cultural Content
-hindi-gst==0.0.1           # Hindi text processing (optional)
+hindi-gst                      # Hindi text processing (optional)
 indic-transliteration==2.3.34  # Hinglish transliteration
 
 # Enhanced Error Handling & Reliability  
