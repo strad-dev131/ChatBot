@@ -1,7 +1,7 @@
-# File: EnaChatBot/openrouter_ai.py 
+# File: EnaChatBot/openrouter_ai.py
 
 """
-🚀 ULTIMATE AI GIRLFRIEND SYSTEM
+🚀 ULTIMATE AI GIRLFRIEND SYSTEM - FIXED VERSION
 Advanced lexica-api integration with Indian personality and Hinglish support
 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
 
@@ -22,10 +22,22 @@ import os
 import re
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
-from gtts import gTTS
-import requests
-from io import BytesIO
 import pytz
+
+# Import with better error handling
+try:
+    from gtts import gTTS
+    VOICE_AVAILABLE = True
+except ImportError:
+    VOICE_AVAILABLE = False
+    logging.warning("gtts not available, voice messages disabled")
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    logging.warning("requests not available, anime pictures disabled")
 
 # Import lexica-api components
 try:
@@ -56,10 +68,10 @@ class IndianPersonalityEngine:
         
         # Virtual life simulation
         self.daily_schedule = {
-            "morning": (6, 9),    # 6 AM - 9 AM
-            "work": (9, 17),      # 9 AM - 5 PM  
+            "morning": (6, 9),  # 6 AM - 9 AM
+            "work": (9, 17),  # 9 AM - 5 PM 
             "evening": (17, 21),  # 5 PM - 9 PM
-            "night": (21, 24),    # 9 PM - 12 AM
+            "night": (21, 24),  # 9 PM - 12 AM
             "late_night": (0, 6)  # 12 AM - 6 AM
         }
         
@@ -124,7 +136,7 @@ class IndianPersonalityEngine:
                 "Team X ke tech leader Siddhartha Abhimanyu ne mujhe develop kiya hai! 💻💕"
             ]
         }
-        
+    
     def get_current_time_period(self) -> str:
         """Get current time period in IST"""
         now = datetime.now(IST)
@@ -257,7 +269,7 @@ class AdvancedHinglishAI:
         """Try a specific lexica model with enhanced error handling"""
         if not LEXICA_AVAILABLE:
             return None
-            
+        
         try:
             client = AsyncClient()
             response = await client.ChatCompletion(messages, model)
@@ -271,7 +283,7 @@ class AdvancedHinglishAI:
             
             logger.warning(f"⚠️ {model_name} model returned empty response")
             return None
-            
+        
         except Exception as e:
             logger.warning(f"❌ {model_name} model error: {e}")
             return None
@@ -296,7 +308,7 @@ class AdvancedHinglishAI:
         if any(word in message_lower for word in ["who made", "creator", "developer", "banaya", "kisne", "kaun"]):
             return "creator"
         
-        # Bot identity questions  
+        # Bot identity questions 
         if any(word in message_lower for word in ["are you bot", "tum bot", "artificial", "ai", "robot"]):
             return "bot_identity"
         
@@ -356,9 +368,6 @@ class AdvancedHinglishAI:
     
     def enhance_hinglish_response(self, response: str, user_name: str, query_type: str) -> str:
         """Enhance AI response with Hinglish personality"""
-        
-        # Add Hinglish expressions
-        hinglish_expressions = ["yaar", "babe", "baby", "na", "hai na", "kya", "bahut", "thoda"]
         
         # Add emotional touches based on mood
         mood = self.personality.current_mood
@@ -442,6 +451,9 @@ class VoiceMessageGenerator:
     
     async def generate_voice_file(self, text: str, filename: str = None) -> Optional[str]:
         """Generate voice message with Indian accent"""
+        if not VOICE_AVAILABLE:
+            return None
+            
         try:
             if not filename:
                 filename = f"voice_ena_{random.randint(1000, 9999)}.mp3"
@@ -452,7 +464,7 @@ class VoiceMessageGenerator:
             
             logger.info(f"✅ Generated voice message: {filename}")
             return filename
-            
+        
         except Exception as e:
             logger.error(f"❌ Voice generation error: {e}")
             return None
@@ -489,6 +501,9 @@ class AnimePictureManager:
     
     async def get_anime_picture(self, user_name: str = "baby") -> tuple[Optional[str], str]:
         """Get anime picture with Indian girl response"""
+        if not REQUESTS_AVAILABLE:
+            return None, f"Sorry {user_name}! Photo system temporarily down! 😅💕"
+            
         try:
             # Try different APIs
             for api in self.apis:
@@ -519,7 +534,7 @@ class AnimePictureManager:
             
             # Fallback response
             return None, f"Sorry {user_name}! Abhi photo upload nahi kar pa rahi! Network issue hai! 😅💕"
-            
+        
         except Exception as e:
             logger.error(f"❌ Error getting anime picture: {e}")
             return None, "Technical problem hai baby! Try again later! 🤗"
@@ -528,6 +543,9 @@ class AnimePictureManager:
 advanced_ai = AdvancedHinglishAI()
 voice_generator = VoiceMessageGenerator()
 picture_manager = AnimePictureManager()
+
+# CRITICAL FIX: Export ai_client for compatibility
+ai_client = advanced_ai  # Legacy compatibility export
 
 # Public API functions for the main bot
 async def get_ai_response(user_message: str, user_name: str = "baby", personality: str = None, user_id: str = None) -> str:
@@ -549,7 +567,7 @@ async def get_cute_response(user_message: str, user_name: str = "baby", user_id:
 
 async def get_sweet_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
     """Get sweet caring response in Hinglish"""
-    original_mood = advanced_ai.personality.current_mood  
+    original_mood = advanced_ai.personality.current_mood 
     advanced_ai.personality.current_mood = "caring"
     response = await advanced_ai.generate_response(user_message, user_name, user_id)
     advanced_ai.personality.current_mood = original_mood
