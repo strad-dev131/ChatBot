@@ -1,7 +1,7 @@
 # File: EnaChatBot/openrouter_ai.py
 
 """
-🚀 ULTIMATE AI GIRLFRIEND SYSTEM - FIXED VERSION
+🚀 ULTIMATE AI GIRLFRIEND SYSTEM - COMPLETE & WORKING
 Advanced lexica-api integration with Indian personality and Hinglish support
 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
 
@@ -24,28 +24,31 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 import pytz
 
-# Import with better error handling
+# Import with comprehensive error handling
 try:
     from gtts import gTTS
     VOICE_AVAILABLE = True
+    logging.info("✅ Voice system (gtts) loaded successfully")
 except ImportError:
     VOICE_AVAILABLE = False
-    logging.warning("gtts not available, voice messages disabled")
+    logging.warning("⚠️ gtts not available, voice messages disabled")
 
 try:
     import requests
     REQUESTS_AVAILABLE = True
+    logging.info("✅ HTTP system (requests) loaded successfully")
 except ImportError:
     REQUESTS_AVAILABLE = False
-    logging.warning("requests not available, anime pictures disabled")
+    logging.warning("⚠️ requests not available, anime pictures disabled")
 
 # Import lexica-api components
 try:
     from lexica import AsyncClient, languageModels, Messages
     LEXICA_AVAILABLE = True
+    logging.info("✅ AI system (lexica-api) loaded successfully")
 except ImportError:
     LEXICA_AVAILABLE = False
-    logging.warning("lexica-api not available, using fallback responses")
+    logging.warning("⚠️ lexica-api not available, using fallback responses")
 
 logger = logging.getLogger(__name__)
 
@@ -544,37 +547,56 @@ advanced_ai = AdvancedHinglishAI()
 voice_generator = VoiceMessageGenerator()
 picture_manager = AnimePictureManager()
 
-# CRITICAL FIX: Export ai_client for compatibility
-ai_client = advanced_ai  # Legacy compatibility export
+# ========================================
+# PUBLIC API FUNCTIONS FOR THE MAIN BOT
+# ========================================
 
-# Public API functions for the main bot
 async def get_ai_response(user_message: str, user_name: str = "baby", personality: str = None, user_id: str = None) -> str:
     """Main AI response function - Hinglish enabled"""
-    return await advanced_ai.generate_response(user_message, user_name, user_id)
+    try:
+        return await advanced_ai.generate_response(user_message, user_name, user_id)
+    except Exception as e:
+        logger.error(f"❌ Error in get_ai_response: {e}")
+        return advanced_ai.get_fallback_response(user_message, user_name, "general")
 
 async def get_flirty_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
     """Get flirty response in Hinglish"""
-    # Set romantic mood temporarily
-    original_mood = advanced_ai.personality.current_mood
-    advanced_ai.personality.current_mood = "romantic"
-    response = await advanced_ai.generate_response(user_message, user_name, user_id)
-    advanced_ai.personality.current_mood = original_mood
-    return response
+    try:
+        # Set romantic mood temporarily
+        original_mood = advanced_ai.personality.current_mood
+        advanced_ai.personality.current_mood = "romantic"
+        response = await advanced_ai.generate_response(user_message, user_name, user_id)
+        advanced_ai.personality.current_mood = original_mood
+        return response
+    except Exception as e:
+        logger.error(f"❌ Error in get_flirty_response: {e}")
+        return f"Aww {user_name}! Tum bahut sweet ho! 😘💕"
 
 async def get_cute_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
     """Get cute response in Hinglish"""
-    return await advanced_ai.generate_response(user_message, user_name, user_id)
+    try:
+        return await advanced_ai.generate_response(user_message, user_name, user_id)
+    except Exception as e:
+        logger.error(f"❌ Error in get_cute_response: {e}")
+        return f"Hey {user_name}! Tum kitne cute ho! 🥰💕"
 
 async def get_sweet_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
     """Get sweet caring response in Hinglish"""
-    original_mood = advanced_ai.personality.current_mood 
-    advanced_ai.personality.current_mood = "caring"
-    response = await advanced_ai.generate_response(user_message, user_name, user_id)
-    advanced_ai.personality.current_mood = original_mood
-    return response
+    try:
+        original_mood = advanced_ai.personality.current_mood 
+        advanced_ai.personality.current_mood = "caring"
+        response = await advanced_ai.generate_response(user_message, user_name, user_id)
+        advanced_ai.personality.current_mood = original_mood
+        return response
+    except Exception as e:
+        logger.error(f"❌ Error in get_sweet_response: {e}")
+        return f"Aww {user_name}! Main tumhare saath hun! 🤗💕"
 
 def should_send_voice_message(emotion: str, relationship_level: int = 1) -> bool:
     """Check if should send voice message based on context"""
+    if not VOICE_AVAILABLE:
+        return False
+        
     voice_chances = {
         "romantic": 0.3,
         "good_morning": 0.25,
@@ -590,34 +612,48 @@ def should_send_voice_message(emotion: str, relationship_level: int = 1) -> bool
 
 async def generate_voice_message(message: str, emotion: str, user_name: str = "baby") -> Optional[str]:
     """Generate voice message file"""
-    scenario_mapping = {
-        "romantic": "love_confession",
-        "good_morning": "good_morning", 
-        "good_night": "good_night",
-        "missing": "missing",
-        "caring": "encouragement"
-    }
-    
-    scenario = scenario_mapping.get(emotion, "love_confession")
-    text = voice_generator.get_voice_text(scenario, user_name)
-    
-    return await voice_generator.generate_voice_file(text)
+    if not VOICE_AVAILABLE:
+        return None
+        
+    try:
+        scenario_mapping = {
+            "romantic": "love_confession",
+            "good_morning": "good_morning", 
+            "good_night": "good_night",
+            "missing": "missing",
+            "caring": "encouragement"
+        }
+        
+        scenario = scenario_mapping.get(emotion, "love_confession")
+        text = voice_generator.get_voice_text(scenario, user_name)
+        
+        return await voice_generator.generate_voice_file(text)
+    except Exception as e:
+        logger.error(f"❌ Error generating voice message: {e}")
+        return None
 
 def get_voice_message_text(message: str, emotion: str, user_name: str = "baby") -> str:
     """Get voice message text without generating file"""
-    scenario_mapping = {
-        "romantic": "love_confession",
-        "good_morning": "good_morning",
-        "good_night": "good_night", 
-        "missing": "missing",
-        "caring": "encouragement"
-    }
-    
-    scenario = scenario_mapping.get(emotion, "love_confession")
-    return voice_generator.get_voice_text(scenario, user_name)
+    try:
+        scenario_mapping = {
+            "romantic": "love_confession",
+            "good_morning": "good_morning",
+            "good_night": "good_night", 
+            "missing": "missing",
+            "caring": "encouragement"
+        }
+        
+        scenario = scenario_mapping.get(emotion, "love_confession")
+        return voice_generator.get_voice_text(scenario, user_name)
+    except Exception as e:
+        logger.error(f"❌ Error getting voice text: {e}")
+        return f"Hey {user_name}! Main tumse bahut pyaar karti hun!"
 
 def is_photo_request(message: str) -> bool:
     """Check if user is requesting a photo in English or Hinglish"""
+    if not message:
+        return False
+        
     photo_keywords = [
         "photo", "picture", "pic", "selfie", "image",
         "tum kaisi dikhti", "dikhao", "send pic", "show yourself",
@@ -629,18 +665,83 @@ def is_photo_request(message: str) -> bool:
 
 async def get_anime_picture_for_request(message: str, user_name: str = "baby") -> tuple[Optional[str], str]:
     """Get anime picture for photo requests"""
-    return await picture_manager.get_anime_picture(user_name)
+    try:
+        return await picture_manager.get_anime_picture(user_name)
+    except Exception as e:
+        logger.error(f"❌ Error getting anime picture: {e}")
+        return None, f"Sorry {user_name}! Technical problem hai! Try again later! 🤗"
 
 def get_offline_response(message: str, user_name: str = "baby", user_id: str = None) -> str:
     """Get offline response in Hinglish""" 
-    return advanced_ai.get_fallback_response(message, user_name, "general")
+    try:
+        return advanced_ai.get_fallback_response(message, user_name, "general")
+    except Exception as e:
+        logger.error(f"❌ Error in offline response: {e}")
+        return f"Hey {user_name}! Kya haal hai? 😊💕"
+
+# ========================================
+# LEGACY COMPATIBILITY FUNCTIONS
+# ========================================
+
+# For backward compatibility with old modules
+async def openrouter_response(message: str, user_name: str = "baby") -> str:
+    """Legacy function for compatibility"""
+    return await get_ai_response(message, user_name)
+
+def check_ai_status() -> bool:
+    """Check if AI system is working"""
+    return LEXICA_AVAILABLE
+
+def get_ai_status() -> dict:
+    """Get detailed AI system status"""
+    return {
+        "lexica_available": LEXICA_AVAILABLE,
+        "voice_available": VOICE_AVAILABLE,
+        "requests_available": REQUESTS_AVAILABLE,
+        "ai_models": len(advanced_ai.models) if LEXICA_AVAILABLE else 0,
+        "personality_loaded": True,
+        "voice_scenarios": len(voice_generator.voice_scenarios),
+        "picture_apis": len(picture_manager.apis)
+    }
 
 # Cleanup function
 async def cleanup_ai():
     """Cleanup AI resources"""
-    if advanced_ai.session:
-        await advanced_ai.session.close()
+    try:
+        if advanced_ai.session:
+            await advanced_ai.session.close()
+        logger.info("✅ AI resources cleaned up successfully")
+    except Exception as e:
+        logger.error(f"❌ Error cleaning up AI resources: {e}")
+
+# ========================================
+# CRITICAL EXPORTS FOR MODULE COMPATIBILITY
+# ========================================
+
+# Export status flags for module imports
+is_ai_enabled = LEXICA_AVAILABLE  # True if full AI backend is working
+ai_client = advanced_ai  # Legacy compatibility export
+openrouter_ai = advanced_ai  # Alternative export name
+
+# System status flags
+VOICE_ENABLED = VOICE_AVAILABLE
+PICTURES_ENABLED = REQUESTS_AVAILABLE
+AI_SYSTEM_READY = True
 
 # Initialize system
 logger.info("🚀 Ultimate AI Girlfriend System initialized with Indian personality and Hinglish support!")
-logger.info("💕 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X")
+logger.info(f"💕 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X")
+logger.info(f"✅ AI System Status: {'Fully Operational' if LEXICA_AVAILABLE else 'Fallback Mode'}")
+logger.info(f"🔊 Voice System: {'Enabled' if VOICE_AVAILABLE else 'Disabled'}")
+logger.info(f"📸 Picture System: {'Enabled' if REQUESTS_AVAILABLE else 'Disabled'}")
+logger.info("🎉 Ena is ready to be your perfect Indian girlfriend!")
+
+# Module exports for compatibility
+__all__ = [
+    'get_ai_response', 'get_flirty_response', 'get_cute_response', 'get_sweet_response',
+    'should_send_voice_message', 'generate_voice_message', 'get_voice_message_text',
+    'is_photo_request', 'get_anime_picture_for_request', 'get_offline_response',
+    'openrouter_response', 'check_ai_status', 'get_ai_status', 'cleanup_ai',
+    'is_ai_enabled', 'ai_client', 'openrouter_ai', 'advanced_ai',
+    'LEXICA_AVAILABLE', 'VOICE_AVAILABLE', 'REQUESTS_AVAILABLE'
+]
