@@ -229,3 +229,33 @@ LOGGER.info(f"🗣️ Languages: {SYSTEM_INFO['language_support']}")
 LOGGER.info(f"🧠 AI Models: {SYSTEM_INFO['ai_models']}")
 LOGGER.info(f"✨ Features: {SYSTEM_INFO['features']}")
 LOGGER.info("=" * 60)
+
+# ===============================================
+# 🔧 CRITICAL FIX: Custom Decorators
+# ===============================================
+
+import pyrogram.handlers
+from pyrogram import filters
+
+def on_cmd(self, commands, group=0):
+    """Custom command decorator for EnaChatBot"""
+    def decorator(func):
+        # Create command filters
+        if isinstance(commands, str):
+            command_list = [commands]
+        else:
+            command_list = commands
+            
+        # Create the filter for commands
+        cmd_filter = filters.command(command_list) & ~filters.bot
+        
+        # Register the handler
+        self.add_handler(
+            pyrogram.handlers.MessageHandler(func, cmd_filter),
+            group=group
+        )
+        return func
+    return decorator
+
+# Add methods to EnaChatBot class
+EnaChatBot.on_cmd = on_cmd
