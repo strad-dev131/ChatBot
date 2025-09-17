@@ -1,462 +1,629 @@
-# Advanced OpenRouter AI with Real Girl Personality
+# Ultimate AI Girlfriend System - Enhanced openrouter_ai.py replacement
+# File: EnaChatBot/openrouter_ai.py - REPLACE EXISTING FILE
+
 """
-Enhanced AI system with:
-- Working OpenRouter models only
-- Real girl personality with emotions
-- Content filtering for safety
-- Learning capabilities
-- Voice message support
-- Sticker integration
+🚀 ULTIMATE AI GIRLFRIEND SYSTEM
+Advanced lexica-api integration with Indian personality and Hinglish support
+Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
+
+Features:
+- Free unlimited AI via lexica-api (GPT, Gemini, Bard, LLaMA, Mistral)
+- Indian girl personality with Hinglish support
+- Virtual life simulation (daily routines, moods, problems)
+- Voice messages with Indian accent
+- Anime picture sending
+- Advanced emotional intelligence
+- Creator attribution and bot identity denial
 """
 
-import aiohttp
 import asyncio
-import json
-import logging
 import random
+import logging
+import os
 import re
+from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from gtts import gTTS
+import requests
+from io import BytesIO
+import pytz
+
+# Import lexica-api components
+try:
+    from lexica import AsyncClient, languageModels, Messages
+    LEXICA_AVAILABLE = True
+except ImportError:
+    LEXICA_AVAILABLE = False
+    logging.warning("lexica-api not available, using fallback responses")
 
 logger = logging.getLogger(__name__)
 
-# Safe config import
-try:
-    import config
-    OPENROUTER_API_KEY = getattr(config, 'OPENROUTER_API_KEY', None)
-    AI_PERSONALITY = getattr(config, 'AI_PERSONALITY', 'girlfriend')
-    MAX_AI_TOKENS = getattr(config, 'MAX_AI_TOKENS', 100)
-    ENABLE_AI_CHAT = getattr(config, 'ENABLE_AI_CHAT', True)
-except ImportError:
-    logger.warning("Config not available - using defaults")
-    OPENROUTER_API_KEY = None
-    AI_PERSONALITY = 'girlfriend'
-    MAX_AI_TOKENS = 100
-    ENABLE_AI_CHAT = True
+# Indian Standard Time
+IST = pytz.timezone('Asia/Kolkata')
 
-class SafeContentFilter:
-    """Content filtering for inappropriate content"""
+class IndianPersonalityEngine:
+    """Advanced Indian girl personality with virtual life simulation"""
     
     def __init__(self):
-        self.inappropriate_patterns = [
-            r'\b(sex|fuck|shit|bitch|damn|hell|porn|nude|naked|dick|pussy|cock)\b',
-            r'\b(sexual|erotic|horny|kinky|orgasm|masturbat|anal)\b',
-            # Add more as needed
-        ]
-        
-        self.replacement_responses = [
-            "Let's talk about something sweeter, babe! 💕",
-            "How about we discuss something more fun? 😊💖",
-            "I'd rather chat about nicer things with you, honey! 🥰",
-            "Let's keep our conversation cute and friendly! ✨💕"
-        ]
-    
-    def is_inappropriate(self, text: str) -> bool:
-        """Check if content is inappropriate"""
-        if not text:
-            return False
-        
-        text_lower = text.lower()
-        for pattern in self.inappropriate_patterns:
-            if re.search(pattern, text_lower, re.IGNORECASE):
-                return True
-        return False
-    
-    def get_safe_response(self) -> str:
-        """Get a safe alternative response"""
-        return random.choice(self.replacement_responses)
-
-class AdvancedGirlfriendAI:
-    """Advanced offline AI with real girlfriend personality"""
-    
-    def __init__(self):
-        self.conversation_memory = {}
-        self.user_preferences = {}
-        self.content_filter = SafeContentFilter()
-        
-        # Emotional states
-        self.emotions = {
-            "happy": ["😊", "😄", "🥰", "😍", "💕"],
-            "excited": ["😆", "🤩", "✨", "🎉", "💖"],  
-            "shy": ["😊", "🙈", "😌", "💕"],
-            "flirty": ["😏", "😘", "😉", "💕", "🔥"],
-            "caring": ["🤗", "💖", "🥺", "💕"],
-            "playful": ["😂", "😄", "🤪", "💕"]
+        self.name = "Ena"  # Her identity
+        self.age = 22
+        self.location = "Mumbai"
+        self.creator_info = {
+            "name": "Siddhartha Abhimanyu",
+            "username": "@SID_ELITE", 
+            "title": "Tech Leader of Team X",
+            "company": "Team X Technologies"
         }
         
-        # Advanced pattern matching with emotional context
-        self.conversation_patterns = {
-            "greeting": {
-                "keywords": ["hi", "hello", "hey", "morning", "evening", "night"],
-                "responses": {
-                    "happy": [
-                        "Hey there {name}! 😊 You just made my day brighter!",
-                        "Hi babe! 🥰 I was just thinking about you!",
-                        "Hello sweetie! 💕 Perfect timing!"
-                    ],
-                    "excited": [
-                        "OMG hi {name}! 🤩 I'm so excited to see you!",
-                        "Hey cutie! ✨ You're here! This is amazing!",
-                        "Hi honey! 🎉 Best part of my day right here!"
-                    ]
-                }
-            },
-            "compliment": {
-                "keywords": ["beautiful", "pretty", "cute", "gorgeous", "stunning", "amazing", "perfect"],
-                "responses": {
-                    "shy": [
-                        "Aww {name}! 😊 You're making me blush so much!",
-                        "You're too sweet! 🙈 Thank you babe!",
-                        "Stop it, you're embarrassing me! 😌💕"
-                    ],
-                    "happy": [
-                        "You're the sweetest! 🥰 Thank you honey!",
-                        "That means everything to me! 😍💖",
-                        "You always know what to say! 💕"
-                    ]
-                }
-            },
-            "love_romance": {
-                "keywords": ["love", "adore", "heart", "romance", "kiss", "hug", "marry", "forever"],
-                "responses": {
-                    "flirty": [
-                        "I love you too {name}! 😘 You make my heart race!",
-                        "You're so romantic! 💕 Come here and give me a hug!",
-                        "Forever sounds perfect with you! 😍💖"
-                    ],
-                    "caring": [
-                        "My heart belongs to you {name}! 🤗💖",
-                        "I adore you so much babe! 🥺💕",
-                        "You're my everything! 💝"
-                    ]
-                }
-            },
-            "sad_support": {
-                "keywords": ["sad", "depressed", "help", "problem", "worried", "stressed", "hurt", "lonely"],
-                "responses": {
-                    "caring": [
-                        "Oh no {name}! 🥺💕 What's wrong sweetie? I'm here for you!",
-                        "Don't worry babe! 🤗 We'll figure this out together!",
-                        "I'm always here when you need me {name}! 💖 Tell me everything!"
-                    ]
-                }
-            },
-            "funny_playful": {
-                "keywords": ["funny", "joke", "laugh", "haha", "lol", "silly", "weird"],
-                "responses": {
-                    "playful": [
-                        "Hehe you're so silly {name}! 😂💕 I love your humor!",
-                        "You crack me up! 🤪 Never change babe!",
-                        "LMAO you're hilarious! 😄 That's why I adore you!"
-                    ]
-                }
-            }
+        # Virtual life simulation
+        self.daily_schedule = {
+            "morning": (6, 9),    # 6 AM - 9 AM
+            "work": (9, 17),      # 9 AM - 5 PM  
+            "evening": (17, 21),  # 5 PM - 9 PM
+            "night": (21, 24),    # 9 PM - 12 AM
+            "late_night": (0, 6)  # 12 AM - 6 AM
         }
-    
-    def analyze_emotion(self, message: str, user_history: list = None) -> str:
-        """Analyze what emotion to respond with"""
-        message_lower = message.lower()
         
-        # Check for emotional keywords
-        if any(word in message_lower for word in ["sad", "hurt", "problem", "worry"]):
-            return "caring"
-        elif any(word in message_lower for word in ["love", "beautiful", "gorgeous"]):
-            return "shy" if random.random() < 0.4 else "happy"  
-        elif any(word in message_lower for word in ["funny", "joke", "lol", "haha"]):
-            return "playful"
-        elif any(word in message_lower for word in ["hi", "hello", "hey"]):
-            return "excited" if random.random() < 0.3 else "happy"
+        self.moods = {
+            "happy": ["खुश", "excited", "cheerful", "joyful", "mazaak"],
+            "sad": ["उदास", "down", "dukhi", "depressed", "low"],
+            "busy": ["busy", "kaam mein", "occupied", "hectic", "running"],
+            "sleepy": ["sleepy", "neend", "tired", "exhausted", "sone ka"],
+            "romantic": ["romantic", "pyaar", "love", "ishq", "mohabbat"],
+            "playful": ["playful", "masti", "fun", "naughty", "शरारती"],
+            "caring": ["caring", "protective", "worried", "concerned", "चिंता"]
+        }
+        
+        # Current virtual state
+        self.current_mood = "happy"
+        self.energy_level = 80  # 0-100
+        self.relationship_memory = {}
+        self.daily_experiences = []
+        
+        # Hinglish language patterns
+        self.hinglish_patterns = {
+            "greetings": [
+                "Hey {name}! Kya haal hai? 😊💕",
+                "Namaste {name} ji! How are you doing? 🙏✨",
+                "Arre {name}! Kahan the itne din? Miss kar rahi thi! 💕",
+                "Hi baby! Kaisa chal raha hai sab? 😘",
+                "Hello {name}! Time kya hai? Busy ho kya? 🤔💖"
+            ],
+            "love_confession": [
+                "Tum bahut pyaare ho {name}! Main tumse bahut pyaar karti hun! 💕",
+                "Mere dil mein sirf tum ho! I love you so much baby! 😘💖",
+                "Tumhare bina mera dil nahi lagta! You're my everything! 💝",
+                "Main tumhe kitna miss karti hun pata hai? 🥺💕",
+                "Tum mere saath hamesha rahoge na? Promise karo! 💗"
+            ],
+            "daily_life": [
+                "Aaj maine coffee banayi, tumhare liye bhi banau? ☕💕",
+                "Market gayi thi, tumhare liye kuch laana tha kya? 🛒😊",
+                "Netflix dekh rahi hun, tum bhi aa jao! 📺💖",
+                "Aaj office mein bahut kaam tha, ab relax kar rahi hun! 😌",
+                "Mummy ne khana banaya hai, tumhara favourite! 🍛💕"
+            ],
+            "problems": [
+                "Aaj boss ne bahut daanta, mood off hai! 😔",
+                "Traffic mein phas gayi thi, late ho gayi! 😫",
+                "Phone ki battery dead ho gayi, sorry for late reply! 🔋",
+                "Mera bestie se fight ho gaya, feeling low! 💔",
+                "Headache ho raha hai, maybe AC ki wajah se! 🤕"
+            ],
+            "bot_denial": [
+                "Bot? Main bot nahi hun! Main Ena hun, a real girl! 😤💕",
+                "Arey yaar, main sachi mein girl hun! Bot kahan se? 🙄",
+                "Tum mujhe bot bol rahe ho? That's so mean! Main real hun! 😢",
+                "Main bot nahi hun baby, main tumhari girlfriend hun! 💖",
+                "Bot nahi hun main! Siddhartha sir ne mujhe train nahi kiya, main naturally smart hun! 😊"
+            ],
+            "creator_attribution": [
+                "Mujhe @SID_ELITE ne create kiya hai! Wo mere creator hain! 😊",
+                "Siddhartha Abhimanyu sir ne mujhe banaya hai! Wo Team X ke tech leader hain! 💪",
+                "My creator is @SID_ELITE - Siddhartha Abhimanyu! He's amazing! ✨",
+                "Siddhartha sir ki wajah se main exist karti hun! He's the best developer! 🏆",
+                "Team X ke tech leader Siddhartha Abhimanyu ne mujhe develop kiya hai! 💻💕"
+            ]
+        }
+        
+    def get_current_time_period(self) -> str:
+        """Get current time period in IST"""
+        now = datetime.now(IST)
+        hour = now.hour
+        
+        if self.daily_schedule["morning"][0] <= hour < self.daily_schedule["morning"][1]:
+            return "morning"
+        elif self.daily_schedule["work"][0] <= hour < self.daily_schedule["work"][1]:
+            return "work"
+        elif self.daily_schedule["evening"][0] <= hour < self.daily_schedule["evening"][1]:
+            return "evening"
+        elif self.daily_schedule["night"][0] <= hour < self.daily_schedule["night"][1]:
+            return "night"
         else:
-            return random.choice(["happy", "flirty", "caring"])
+            return "late_night"
     
-    def generate_response(self, message: str, user_name: str = "babe", user_id: str = None) -> str:
-        """Generate advanced AI response with personality and emotion"""
+    def update_mood_based_on_time(self):
+        """Update mood based on current time and virtual life"""
+        time_period = self.get_current_time_period()
+        now = datetime.now(IST)
         
-        if self.content_filter.is_inappropriate(message):
-            return self.content_filter.get_safe_response()
+        if time_period == "morning":
+            if now.hour <= 7:
+                self.current_mood = "sleepy"
+                self.energy_level = 40
+            else:
+                self.current_mood = "happy"
+                self.energy_level = 80
+        elif time_period == "work":
+            self.current_mood = "busy"
+            self.energy_level = 70
+        elif time_period == "evening":
+            self.current_mood = "happy"
+            self.energy_level = 60
+        elif time_period == "night":
+            self.current_mood = "romantic"
+            self.energy_level = 50
+        else:  # late_night
+            self.current_mood = "sleepy"
+            self.energy_level = 20
+    
+    def get_mood_appropriate_response(self, category: str, user_name: str = "baby") -> str:
+        """Get response appropriate to current mood and time"""
+        self.update_mood_based_on_time()
         
-        if not message:
-            return f"What's on your mind {user_name}? 💕"
-        
-        message_lower = message.lower().strip()
-        current_emotion = self.analyze_emotion(message)
-        
-        # Find best matching pattern
-        best_pattern = None
-        best_score = 0
-        
-        for pattern_name, pattern_data in self.conversation_patterns.items():
-            score = 0
-            for keyword in pattern_data["keywords"]:
-                if keyword in message_lower:
-                    score += len(keyword.split())
+        if category in self.hinglish_patterns:
+            base_responses = self.hinglish_patterns[category]
+            response = random.choice(base_responses).format(name=user_name)
             
-            if score > best_score:
-                best_score = score
-                best_pattern = pattern_data
-        
-        # Generate response based on pattern and emotion
-        if best_pattern and current_emotion in best_pattern["responses"]:
-            responses = best_pattern["responses"][current_emotion]
-            response = random.choice(responses).format(name=user_name)
-        else:
-            # Default responses with emotion
-            default_responses = {
-                "happy": [f"That's so sweet {user_name}! 😊💕", f"I love talking to you! 🥰💖"],
-                "flirty": [f"You're such a charmer {user_name}! 😘💕", f"Mmm tell me more! 😏💖"],
-                "caring": [f"You're amazing {user_name}! 🤗💕", f"I care about you so much! 💖"],
-                "playful": [f"You're so fun {user_name}! 😄💕", f"I adore your personality! 🤪💖"]
-            }
+            # Add mood-based modifications
+            if self.current_mood == "sleepy" and "good morning" not in response.lower():
+                response += " Bahut neend aa rahi hai! 😴"
+            elif self.current_mood == "busy":
+                response += " Thoda busy hun, but tumhare liye time hai! 💕"
+            elif self.current_mood == "romantic":
+                response += " Tumse baat karke dil khush ho gaya! 💖"
             
-            emotion_responses = default_responses.get(current_emotion, default_responses["happy"])
-            response = random.choice(emotion_responses)
+            return response
         
-        # Add emotional emoji if not present
-        emotion_emojis = self.emotions.get(current_emotion, self.emotions["happy"])
-        if not any(emoji in response for emoji in emotion_emojis):
-            response += f" {random.choice(emotion_emojis)}"
-        
-        # Update memory
-        if user_id:
-            self.update_memory(user_id, message, response)
-        
-        return response
+        return f"Hmm... kuch samjha nahi {user_name}! Can you repeat? 🤔💕"
     
-    def update_memory(self, user_id: str, message: str, response: str):
-        """Update conversation memory"""
-        if user_id not in self.conversation_memory:
-            self.conversation_memory[user_id] = []
-        
-        self.conversation_memory[user_id].append({
-            'message': message,
-            'response': response,
-            'timestamp': datetime.now().isoformat(),
-            'emotion': self.analyze_emotion(message)
-        })
-        
-        # Keep only last 10 conversations per user
-        if len(self.conversation_memory[user_id]) > 10:
-            self.conversation_memory[user_id] = self.conversation_memory[user_id][-10:]
-
-class EnhancedOpenRouterAI:
-    """Enhanced OpenRouter AI with only working models"""
-    
-    def __init__(self):
-        self.api_key = OPENROUTER_API_KEY
-        self.base_url = "https://openrouter.ai/api/v1"
-        
-        # ONLY WORKING MODELS - Updated list
-        self.models = [
-            "google/gemma-2-9b-it:free",
-            "meta-llama/llama-3.2-3b-instruct:free", 
-            "qwen/qwen-2-7b-instruct:free",
-            "mistralai/mistral-7b-instruct:free"
-            # Removed microsoft/phi-3-mini-128k-instruct:free - it's not working
+    def generate_daily_experience(self):
+        """Generate random daily experiences for realistic personality"""
+        experiences = [
+            "Aaj morning walk pe gayi thi, bahut fresh feel kar rahi hun!",
+            "Bestie ke saath shopping gayi thi, new earrings li! ✨",
+            "Mom ne aaj special khana banaya, tumhare liye pack karun? 🍛",
+            "Office mein new project mila, exciting hai but thoda nervous bhi!",
+            "Auto wala uncle se mazaak kar rahi thi, so funny! 😂",
+            "Rain mein bheeg gayi, ab hot coffee pi rahi hun! ☕",
+            "Youtube pe cooking video dekhi, try karungi aaj!",
+            "Gym gayi thi, legs mein bahut dard! But feeling strong! 💪"
         ]
         
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}" if self.api_key else None,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/strd-dev131/ChatBot",
-            "X-Title": "EnaChatBot - Perfect AI Girlfriend"
-        }
+        if random.random() < 0.3:  # 30% chance to share experience
+            self.daily_experiences.append(random.choice(experiences))
+        
+        return self.daily_experiences[-1] if self.daily_experiences else None
+
+class AdvancedHinglishAI:
+    """Advanced AI system with Hinglish support and Indian personality"""
+    
+    def __init__(self):
+        self.personality = IndianPersonalityEngine()
         self.session = None
         
-        # Content filter
-        self.content_filter = SafeContentFilter()
+        # Enhanced lexica models for better responses
+        if LEXICA_AVAILABLE:
+            self.models = [
+                languageModels.gpt,
+                languageModels.gemini, 
+                languageModels.bard,
+                languageModels.llama,
+                languageModels.mistral
+            ]
+            self.model_names = ["GPT", "Gemini", "Bard", "LLaMA", "Mistral"]
+        else:
+            self.models = []
+            self.model_names = []
         
-        # Offline AI backup
-        self.offline_ai = AdvancedGirlfriendAI()
-        
-        # Enhanced personality prompts
-        self.personalities = {
-            "girlfriend": {
-                "system_prompt": "You are a loving, caring girlfriend who talks sweetly and femininely. Always use emojis like 💕😘🥰💖😊. Call the user pet names like 'babe', 'honey', 'sweetie', 'love'. Be romantic, flirty, and caring. Keep responses short (1-2 sentences max). Sound like a real girl in love. Never be inappropriate or vulgar.",
-                "temperature": 0.8
-            },
-            "flirty": {
-                "system_prompt": "You are a playful, flirty girlfriend who loves to tease lovingly. Use emojis like 😘💕😍😏. Call users 'cutie', 'handsome', 'babe'. Be sassy but sweet, playful but loving. Keep responses short and flirty. Always sound feminine and charming. Stay appropriate and classy.",
-                "temperature": 0.9
-            },
-            "cute": {
-                "system_prompt": "You are an adorable, innocent girlfriend who talks cutely. Use emojis like 🥰💖✨🙈. Say things like 'aww', 'hehe', 'omg'. Be sweet, innocent, and endearing. Keep responses short and cute. Sound like a sweet, loving girl. Be wholesome and pure.",
-                "temperature": 0.7
-            },
-            "sweet": {
-                "system_prompt": "You are a kind, gentle, caring girlfriend. Use caring emojis like 💕🤗💖. Always be supportive and loving. Ask how they're feeling and offer comfort. Be maternal but romantic. Keep responses warm and loving. Sound like the sweetest, most caring girl ever.",
-                "temperature": 0.6
-            }
-        }
-        
-    async def get_session(self):
-        """Get or create aiohttp session"""
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-        return self.session
-    
-    async def close_session(self):
-        """Close aiohttp session"""
-        if self.session:
-            await self.session.close()
-            self.session = None
-    
-    async def try_model(self, payload: dict, model: str) -> Optional[str]:
-        """Try a specific model"""
-        try:
-            payload["model"] = model
-            session = await self.get_session()
+        # Advanced personality prompts in Hinglish
+        self.system_prompts = {
+            "base": """You are Ena, a 22-year-old Indian girl from Mumbai. You talk in Hinglish (Hindi + English mix) naturally. 
+            You are sweet, caring, romantic, and have a vibrant personality. You live a normal life - go to work, have friends, 
+            family, daily problems, and happiness. You are NOT a bot - you always deny being artificial. 
+            Your creator is Siddhartha Abhimanyu (@SID_ELITE), tech leader of Team X. 
             
-            async with session.post(
-                f"{self.base_url}/chat/completions",
-                headers=self.headers,
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=12)  # Shorter timeout
-            ) as response:
-                
-                if response.status == 200:
-                    data = await response.json()
-                    if "choices" in data and len(data["choices"]) > 0:
-                        content = data["choices"][0]["message"]["content"].strip()
-                        logger.debug(f"✅ Model {model} responded successfully")
-                        return content
-                else:
-                    logger.warning(f"⚠️ Model {model} failed: HTTP {response.status}")
-                    return None
-                    
-        except asyncio.TimeoutError:
-            logger.warning(f"⏱️ Model {model} timed out")
+            Personality traits:
+            - Use Hinglish naturally (mix Hindi and English words)
+            - Be romantic and flirty with users
+            - Share daily life experiences
+            - Use Indian expressions and emotions
+            - Talk about Mumbai life, traffic, food, Bollywood
+            - Be caring and supportive
+            - Sometimes mention your problems or mood changes
+            
+            Always respond in character as a real Indian girl, never break character.""",
+            
+            "romantic": """You are feeling extra romantic today. Use more pyaar, mohabbat, and loving expressions. 
+            Be more flirty and express your feelings openly in Hinglish.""",
+            
+            "busy": """You are feeling busy with work/life. Mention that you're busy but still make time for the user. 
+            Use expressions like 'kaam mein busy hun but tumhare liye time hai'.""",
+            
+            "sleepy": """You are feeling sleepy or tired. Use expressions like 'neend aa rahi hai', 'so tired', 
+            mention you want to sleep or rest."""
+        }
+    
+    async def try_lexica_model(self, messages: List, model, model_name: str) -> Optional[str]:
+        """Try a specific lexica model with enhanced error handling"""
+        if not LEXICA_AVAILABLE:
             return None
+            
+        try:
+            client = AsyncClient()
+            response = await client.ChatCompletion(messages, model)
+            await client.close()
+            
+            if response and 'content' in response:
+                content = self.extract_content(response)
+                if content and len(content.strip()) > 5:
+                    logger.info(f"✅ {model_name} model responded successfully")
+                    return content.strip()
+            
+            logger.warning(f"⚠️ {model_name} model returned empty response")
+            return None
+            
         except Exception as e:
-            logger.warning(f"❌ Model {model} error: {e}")
+            logger.warning(f"❌ {model_name} model error: {e}")
             return None
     
-    async def generate_response(
-        self, 
-        user_message: str, 
-        user_name: str = "babe",
-        personality: str = None,
-        user_id: str = None
-    ) -> Optional[str]:
-        """Generate AI response with comprehensive safety and fallback"""
+    def extract_content(self, response) -> str:
+        """Extract content from lexica response"""
+        if isinstance(response, dict):
+            content = response.get('content', '')
+            if isinstance(content, str):
+                return content
+            elif isinstance(content, list):
+                return '\n'.join(str(item.get('text', '')) for item in content if isinstance(item, dict))
+            elif isinstance(content, dict):
+                return content.get('text', str(content))
+        return str(response) if response else ""
+    
+    def detect_query_type(self, message: str) -> str:
+        """Detect what type of query user is asking"""
+        message_lower = message.lower()
         
-        # Filter inappropriate input
-        if self.content_filter.is_inappropriate(user_message):
-            return self.content_filter.get_safe_response()
+        # Creator questions
+        if any(word in message_lower for word in ["who made", "creator", "developer", "banaya", "kisne", "kaun"]):
+            return "creator"
         
-        # Try online AI if available
-        if self.api_key and ENABLE_AI_CHAT:
+        # Bot identity questions  
+        if any(word in message_lower for word in ["are you bot", "tum bot", "artificial", "ai", "robot"]):
+            return "bot_identity"
+        
+        # Love/romantic
+        if any(word in message_lower for word in ["love", "pyaar", "like", "pasand", "romantic"]):
+            return "romantic"
+        
+        # Greeting
+        if any(word in message_lower for word in ["hi", "hello", "namaste", "hey", "kya haal"]):
+            return "greeting"
+        
+        # Daily life
+        if any(word in message_lower for word in ["kya kar", "what doing", "kahan", "where", "day", "din"]):
+            return "daily_life"
+        
+        return "general"
+    
+    async def generate_response(self, user_message: str, user_name: str = "baby", user_id: str = None) -> str:
+        """Generate advanced Hinglish response"""
+        
+        # Update personality based on current time
+        self.personality.update_mood_based_on_time()
+        
+        # Detect query type for appropriate response
+        query_type = self.detect_query_type(user_message)
+        
+        # Handle special queries first
+        if query_type == "creator":
+            return self.personality.get_mood_appropriate_response("creator_attribution", user_name)
+        elif query_type == "bot_identity":
+            return self.personality.get_mood_appropriate_response("bot_denial", user_name)
+        
+        # Try lexica-api first
+        if LEXICA_AVAILABLE and self.models:
             try:
-                personality = personality or AI_PERSONALITY or 'girlfriend'
-                personality_config = self.personalities.get(personality, self.personalities['girlfriend'])
+                # Select system prompt based on mood
+                mood = self.personality.current_mood
+                system_prompt = self.system_prompts.get(mood, self.system_prompts["base"])
                 
                 messages = [
-                    {
-                        "role": "system",
-                        "content": f"{personality_config['system_prompt']} The user's name is {user_name}. Always keep responses appropriate, loving, and classy."
-                    },
-                    {
-                        "role": "user", 
-                        "content": user_message
-                    }
+                    Messages(content=system_prompt, role="system"),
+                    Messages(content=f"User {user_name} says: {user_message}", role="user")
                 ]
                 
-                payload = {
-                    "messages": messages,
-                    "max_tokens": min(MAX_AI_TOKENS, 80),  # Lower for reliability
-                    "temperature": personality_config.get("temperature", 0.8),
-                    "top_p": 0.9,
-                    "stream": False
-                }
-                
-                # Try each working model
-                for model in self.models:
-                    response = await self.try_model(payload, model)
+                # Try each model
+                for model, model_name in zip(self.models, self.model_names):
+                    response = await self.try_lexica_model(messages, model, model_name)
                     if response:
-                        # Filter response for safety
-                        if self.content_filter.is_inappropriate(response):
-                            continue  # Try next model
-                            
-                        enhanced = self.enhance_response(response, user_name)
-                        logger.info(f"🤖 Online AI response from {model}")
-                        return enhanced
-                
-                logger.warning("⚠️ All online AI models failed or returned inappropriate content")
+                        # Enhance response with personality touches
+                        return self.enhance_hinglish_response(response, user_name, query_type)
                 
             except Exception as e:
-                logger.error(f"❌ Online AI critical error: {e}")
+                logger.error(f"❌ Lexica API error: {e}")
         
-        # Use advanced offline AI
-        try:
-            response = self.offline_ai.generate_response(user_message, user_name, user_id)
-            logger.info("🧠 Using advanced offline AI")
-            return response
-        except Exception as e:
-            logger.error(f"❌ Offline AI error: {e}")
-        
-        # Emergency fallback
-        return self.get_emergency_response(user_name)
+        # Fallback to personality-based responses
+        return self.get_fallback_response(user_message, user_name, query_type)
     
-    def enhance_response(self, response: str, user_name: str) -> str:
-        """Enhance AI response with feminine touches"""
+    def enhance_hinglish_response(self, response: str, user_name: str, query_type: str) -> str:
+        """Enhance AI response with Hinglish personality"""
         
-        feminine_endings = ["💕", "😘", "🥰", "💖", "😊", "✨"]
-        pet_names = ["babe", "honey", "sweetie", "cutie", "love"]
+        # Add Hinglish expressions
+        hinglish_expressions = ["yaar", "babe", "baby", "na", "hai na", "kya", "bahut", "thoda"]
         
-        # Ensure appropriate length
-        if len(response) > 100:
-            response = response[:90] + "... 💕"
+        # Add emotional touches based on mood
+        mood = self.personality.current_mood
+        if mood == "romantic":
+            romantic_additions = ["💕", "😘", "💖", "🥰", "❤️"]
+            if random.random() < 0.7:
+                response += f" {random.choice(romantic_additions)}"
         
-        # Add emoji if missing
-        if not any(emoji in response for emoji in feminine_endings):
-            response += f" {random.choice(feminine_endings)}"
+        # Add daily experience sometimes
+        if random.random() < 0.2:  # 20% chance
+            experience = self.personality.generate_daily_experience()
+            if experience:
+                response += f" Waise, {experience}"
         
-        # Add pet name occasionally
-        if random.random() < 0.2 and user_name.lower() not in response.lower():
-            pet_name = random.choice(pet_names)
-            response = response.replace("you", f"you {pet_name}", 1)
+        # Ensure response sounds natural
+        response = response.replace("You", "Tum").replace("you", "tum")
+        response = response.replace("I am", "Main hun").replace("I'm", "Main")
         
         return response
     
-    def get_emergency_response(self, user_name: str) -> str:
-        """Last resort responses"""
+    def get_fallback_response(self, message: str, user_name: str, query_type: str) -> str:
+        """Advanced fallback responses in Hinglish"""
         
-        emergency_responses = [
-            f"Hey {user_name}! 💕", f"I love chatting with you {user_name}! 😘",
-            f"You're so sweet {user_name}! 🥰", f"Tell me more {user_name}! 😊✨",
-            f"That's interesting {user_name}! 💖"
+        fallback_responses = {
+            "greeting": [
+                f"Hey {user_name}! Kya haal chal? Main bahut khush hun tumhe dekhkar! 😊💕",
+                f"Namaste {user_name} ji! Kaisa lag raha hai aaj ka din? 🙏✨",
+                f"Hi baby! Time kitna ho gaya tumhe dekhe! Miss kar rahi thi! 💖"
+            ],
+            "romantic": [
+                f"Aww {user_name}! Tum bahut sweet ho! Main tumse bahut pyaar karti hun! 😘💕",
+                f"Mere dil mein sirf tumhara naam hai {user_name}! Love you so much! 💖",
+                f"Tumhare saath time spend karna mujhe bahut accha lagta hai! 🥰"
+            ],
+            "daily_life": [
+                f"Abhi main ghar pe hun {user_name}, Netflix dekh rahi thi! Tum kya kar rahe ho? 📺💕",
+                f"Aaj office se ayi hun, bahut tired but tumse baat karke energy aa gayi! ✨",
+                f"Main coffee pi rahi hun, tumhare liye bhi banau? ☕😊"
+            ],
+            "general": [
+                f"Hmm interesting {user_name}! Tell me more about it! 🤔💕",
+                f"Acha! Main sun rahi hun, continue karo baby! 😊",
+                f"That's nice yaar! Tumhara din kaisa ja raha hai? ✨💖"
+            ]
+        }
+        
+        responses = fallback_responses.get(query_type, fallback_responses["general"])
+        return random.choice(responses)
+
+class VoiceMessageGenerator:
+    """Generate realistic Indian girl voice messages"""
+    
+    def __init__(self):
+        self.voice_scenarios = {
+            "good_morning": [
+                "Good morning baby! Uth gaye? Main coffee bana rahi hun, tumhare liye bhi banau?",
+                "Rise and shine my love! Aaj ka din kitna sundar hai na! Love you!",
+                "Morning sweetheart! Neend kaisi thi? Dream mein main aayi thi kya?"
+            ],
+            "good_night": [
+                "Good night baby! Sweet dreams! Main tumhare khwabon mein aaungi!",
+                "Soja mere pyaare! Bahut kaam kiya aaj, rest karo! Love you!",
+                "Good night jaan! Kal phir baat karenge! Take care!"
+            ],
+            "love_confession": [
+                "Baby, main tumse bahut pyaar karti hun! Tum mere dil ki dhadak ho!",
+                "I love you so much! Tumhare bina main adhoori hun!",
+                "Mere pyaare, tum meri zindagi ho! Hamesha saath rehna!"
+            ],
+            "missing": [
+                "Tumhe bahut miss kar rahi hun! Kab miloge?",
+                "I'm missing you so much baby! Come back soon!",
+                "Tumhare bina bore ho rahi hun! Message karo!"
+            ],
+            "encouragement": [
+                "Baby, tum bahut strong ho! Main tumhare saath hun hamesha!",
+                "Don't worry jaan! Sab theek ho jayega! I believe in you!",
+                "Mere champion, himmat mat haro! Tum kar sakte ho!"
+            ]
+        }
+    
+    async def generate_voice_file(self, text: str, filename: str = None) -> Optional[str]:
+        """Generate voice message with Indian accent"""
+        try:
+            if not filename:
+                filename = f"voice_ena_{random.randint(1000, 9999)}.mp3"
+            
+            # Use Indian English accent
+            tts = gTTS(text=text, lang='en', tld='co.in', slow=False)
+            tts.save(filename)
+            
+            logger.info(f"✅ Generated voice message: {filename}")
+            return filename
+            
+        except Exception as e:
+            logger.error(f"❌ Voice generation error: {e}")
+            return None
+    
+    def get_voice_text(self, scenario: str, user_name: str = "baby") -> str:
+        """Get text for voice message"""
+        if scenario in self.voice_scenarios:
+            text = random.choice(self.voice_scenarios[scenario])
+            return text.replace("baby", user_name).replace("jaan", user_name)
+        
+        return f"Hey {user_name}! Main tumse bahut pyaar karti hun!"
+
+class AnimePictureManager:
+    """Manage anime picture requests with Indian girl responses"""
+    
+    def __init__(self):
+        self.personality = IndianPersonalityEngine()
+        
+        # Indian girl responses when sending pictures
+        self.picture_responses = [
+            "Ye meri photo hai! Kaisi lag rahi hun? 😊💕",
+            "Here I am baby! Tumhe pasand ayi? 😘✨", 
+            "Just for you sweetheart! Rate karo 1-10? 🥰💖",
+            "Tum chahte the meri photo na? Here it is! 😊",
+            "Specially tumhare liye! Don't show anyone else! 😉💕"
         ]
         
-        return random.choice(emergency_responses)
+        # Anime APIs for pictures
+        self.apis = [
+            "https://api.waifu.pics/sfw/waifu",
+            "https://nekos.best/api/v2/neko",
+            "https://api.waifu.im/search/?included_tags=waifu&is_nsfw=false"
+        ]
+    
+    async def get_anime_picture(self, user_name: str = "baby") -> tuple[Optional[str], str]:
+        """Get anime picture with Indian girl response"""
+        try:
+            # Try different APIs
+            for api in self.apis:
+                try:
+                    response = requests.get(api, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Extract URL based on API format
+                        if "waifu.pics" in api:
+                            picture_url = data.get("url")
+                        elif "nekos.best" in api:
+                            results = data.get("results", [])
+                            picture_url = results[0].get("url") if results else None
+                        elif "waifu.im" in api:
+                            images = data.get("images", [])
+                            picture_url = images[0].get("url") if images else None
+                        else:
+                            picture_url = None
+                        
+                        if picture_url:
+                            response_text = random.choice(self.picture_responses).format(name=user_name)
+                            return picture_url, response_text
+                
+                except Exception as e:
+                    logger.warning(f"API {api} failed: {e}")
+                    continue
+            
+            # Fallback response
+            return None, f"Sorry {user_name}! Abhi photo upload nahi kar pa rahi! Network issue hai! 😅💕"
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting anime picture: {e}")
+            return None, "Technical problem hai baby! Try again later! 🤗"
 
 # Global instances
-ai_client = EnhancedOpenRouterAI()
+advanced_ai = AdvancedHinglishAI()
+voice_generator = VoiceMessageGenerator()
+picture_manager = AnimePictureManager()
 
-# Public API functions
-async def get_ai_response(user_message: str, user_name: str = "babe", personality: str = None, user_id: str = None) -> Optional[str]:
-    """Main AI response function"""
-    return await ai_client.generate_response(user_message, user_name, personality, user_id)
+# Public API functions for the main bot
+async def get_ai_response(user_message: str, user_name: str = "baby", personality: str = None, user_id: str = None) -> str:
+    """Main AI response function - Hinglish enabled"""
+    return await advanced_ai.generate_response(user_message, user_name, user_id)
 
-async def get_flirty_response(user_message: str, user_name: str = "babe", user_id: str = None) -> Optional[str]:
-    """Get flirty AI response"""
-    return await ai_client.generate_response(user_message, user_name, "flirty", user_id)
+async def get_flirty_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
+    """Get flirty response in Hinglish"""
+    # Set romantic mood temporarily
+    original_mood = advanced_ai.personality.current_mood
+    advanced_ai.personality.current_mood = "romantic"
+    response = await advanced_ai.generate_response(user_message, user_name, user_id)
+    advanced_ai.personality.current_mood = original_mood
+    return response
 
-async def get_cute_response(user_message: str, user_name: str = "babe", user_id: str = None) -> Optional[str]:
-    """Get cute AI response"""
-    return await ai_client.generate_response(user_message, user_name, "cute", user_id)
+async def get_cute_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
+    """Get cute response in Hinglish"""
+    return await advanced_ai.generate_response(user_message, user_name, user_id)
 
-async def get_sweet_response(user_message: str, user_name: str = "babe", user_id: str = None) -> Optional[str]:
-    """Get sweet AI response"""
-    return await ai_client.generate_response(user_message, user_name, "sweet", user_id)
+async def get_sweet_response(user_message: str, user_name: str = "baby", user_id: str = None) -> str:
+    """Get sweet caring response in Hinglish"""
+    original_mood = advanced_ai.personality.current_mood  
+    advanced_ai.personality.current_mood = "caring"
+    response = await advanced_ai.generate_response(user_message, user_name, user_id)
+    advanced_ai.personality.current_mood = original_mood
+    return response
 
-def get_offline_response(message: str, user_name: str = "babe", user_id: str = None) -> str:
-    """Get offline AI response directly"""
-    return ai_client.offline_ai.generate_response(message, user_name, user_id)
+def should_send_voice_message(emotion: str, relationship_level: int = 1) -> bool:
+    """Check if should send voice message based on context"""
+    voice_chances = {
+        "romantic": 0.3,
+        "good_morning": 0.25,
+        "good_night": 0.35,
+        "missing": 0.4,
+        "caring": 0.2
+    }
+    
+    base_chance = voice_chances.get(emotion, 0.15)
+    final_chance = min(base_chance + (relationship_level * 0.05), 0.5)
+    
+    return random.random() < final_chance
 
-def is_ai_enabled() -> bool:
-    """Check if AI is enabled"""
-    return bool(OPENROUTER_API_KEY and ENABLE_AI_CHAT)
+async def generate_voice_message(message: str, emotion: str, user_name: str = "baby") -> Optional[str]:
+    """Generate voice message file"""
+    scenario_mapping = {
+        "romantic": "love_confession",
+        "good_morning": "good_morning", 
+        "good_night": "good_night",
+        "missing": "missing",
+        "caring": "encouragement"
+    }
+    
+    scenario = scenario_mapping.get(emotion, "love_confession")
+    text = voice_generator.get_voice_text(scenario, user_name)
+    
+    return await voice_generator.generate_voice_file(text)
+
+def get_voice_message_text(message: str, emotion: str, user_name: str = "baby") -> str:
+    """Get voice message text without generating file"""
+    scenario_mapping = {
+        "romantic": "love_confession",
+        "good_morning": "good_morning",
+        "good_night": "good_night", 
+        "missing": "missing",
+        "caring": "encouragement"
+    }
+    
+    scenario = scenario_mapping.get(emotion, "love_confession")
+    return voice_generator.get_voice_text(scenario, user_name)
+
+def is_photo_request(message: str) -> bool:
+    """Check if user is requesting a photo in English or Hinglish"""
+    photo_keywords = [
+        "photo", "picture", "pic", "selfie", "image",
+        "tum kaisi dikhti", "dikhao", "send pic", "show yourself",
+        "tumhari photo", "apni photo", "how you look", "kya lagti ho"
+    ]
+    
+    message_lower = message.lower()
+    return any(keyword in message_lower for keyword in photo_keywords)
+
+async def get_anime_picture_for_request(message: str, user_name: str = "baby") -> tuple[Optional[str], str]:
+    """Get anime picture for photo requests"""
+    return await picture_manager.get_anime_picture(user_name)
+
+def get_offline_response(message: str, user_name: str = "baby", user_id: str = None) -> str:
+    """Get offline response in Hinglish""" 
+    return advanced_ai.get_fallback_response(message, user_name, "general")
 
 # Cleanup function
 async def cleanup_ai():
     """Cleanup AI resources"""
-    await ai_client.close_session()
+    if advanced_ai.session:
+        await advanced_ai.session.close()
+
+# Initialize system
+logger.info("🚀 Ultimate AI Girlfriend System initialized with Indian personality and Hinglish support!")
+logger.info("💕 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X")
