@@ -1,3 +1,5 @@
+# Enhanced __init__.py - EnaChatBot/__init__.py - MINOR UPDATE
+
 import logging
 import time
 from pymongo import MongoClient
@@ -166,3 +168,64 @@ if config.STRING1:
     )
 else:
     userbot = None
+
+# ===============================================
+# 🚀 ENHANCED IMPORTS FOR AI GIRLFRIEND SYSTEM
+# ===============================================
+
+# Enhanced AI system imports with error handling
+try:
+    from .openrouter_ai import get_ai_response, get_flirty_response, get_cute_response
+    LOGGER.info("✅ Ultimate AI girlfriend system imported successfully")
+    AI_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    LOGGER.warning(f"⚠️ Ultimate AI system not available: {e}")
+    AI_SYSTEM_AVAILABLE = False
+
+# Voice and media imports
+try:
+    from gtts import gTTS
+    VOICE_SYSTEM_AVAILABLE = True
+    LOGGER.info("✅ Voice message system available")
+except ImportError as e:
+    LOGGER.warning(f"⚠️ Voice system not available: {e}")
+    VOICE_SYSTEM_AVAILABLE = False
+
+# Enhanced features flag
+ENHANCED_FEATURES = {
+    "ai_system": AI_SYSTEM_AVAILABLE,
+    "voice_messages": VOICE_SYSTEM_AVAILABLE,
+    "hinglish_support": True,  # Always available
+    "indian_personality": True,  # Always available
+    "relationship_system": True,  # Always available
+    "virtual_life": True  # Always available
+}
+
+LOGGER.info("🚀 Enhanced ChatBot initialization completed!")
+LOGGER.info(f"💕 Features available: {sum(ENHANCED_FEATURES.values())}/{len(ENHANCED_FEATURES)}")
+
+if AI_SYSTEM_AVAILABLE:
+    LOGGER.info("✨ World-class AI girlfriend system ready!")
+else:
+    LOGGER.warning("⚠️ Running with basic responses - install lexica-api for full features")
+
+# System information
+SYSTEM_INFO = {
+    "version": "2.0.0-ultimate",
+    "creator": "@SID_ELITE (Siddhartha Abhimanyu)",
+    "team": "Team X Technologies",
+    "personality": "Indian Girlfriend (Ena)",
+    "language_support": "Hinglish + English + Hindi",
+    "ai_models": "GPT, Gemini, Bard, LLaMA, Mistral" if AI_SYSTEM_AVAILABLE else "Offline only",
+    "features": "Voice Messages, Anime Pictures, Smart Stickers, Relationship System"
+}
+
+LOGGER.info("=" * 60)
+LOGGER.info("🤖 Ultimate AI Girlfriend ChatBot System")
+LOGGER.info(f"👨‍💻 Created by: {SYSTEM_INFO['creator']}")
+LOGGER.info(f"🏢 Team: {SYSTEM_INFO['team']}")
+LOGGER.info(f"🎭 Personality: {SYSTEM_INFO['personality']}")
+LOGGER.info(f"🗣️ Languages: {SYSTEM_INFO['language_support']}")
+LOGGER.info(f"🧠 AI Models: {SYSTEM_INFO['ai_models']}")
+LOGGER.info(f"✨ Features: {SYSTEM_INFO['features']}")
+LOGGER.info("=" * 60)
