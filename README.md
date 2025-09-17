@@ -94,8 +94,12 @@ Ena: *sends voice message* "Good morning baby! Uth gaye? Main coffee bana rahi h
 
 ### **One-Click Deploy**
 
-<a href="http://dashboard.heroku.com/new?template=https://github.com/strad-dev131/TeamXmusic3.0"><img src="https://img.shields.io/badge/Deploy%20to-Heroku-purple?style=for-the-badge&logo=heroku" /></a> |
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/deploy)
+<a href="http://dashboard.heroku.com/new?template=https://github.com/strad-dev131/TeamXmusic3.0">
+  <img src="https://img.shields.io/badge/Deploy%20to-Heroku-purple?style=for-the-badge&logo=heroku" />
+</a>
+<a href="https://railway.app/deploy">
+  <img src="https://railway.app/button.svg" alt="Deploy on Railway" />
+</a>
 
 ### **Fork & Deploy (Recommended)**
 ```bash
