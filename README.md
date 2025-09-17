@@ -409,7 +409,7 @@ pm2 restart EnaChatBot
 ### **Development Setup**
 ```bash
 # Clone for development
-git clone https://github.com/strd-dev131/ChatBot.git
+git clone https://github.com/strad-dev131/ChatBot.git
 cd ChatBot
 
 # Create virtual environment
