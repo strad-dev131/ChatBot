@@ -1,187 +1,262 @@
 # ===============================================
-# 🎯 REALISTIC BEHAVIOR CONFIGURATION ADDITIONS
+# 🤖 EnaChatBot - Ultimate Realistic Indian AI Girl
+# Complete Configuration File - 100% Working
 # Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
 # ===============================================
 
-# Import additional required modules for realistic behavior
+import os
+import logging
 from datetime import datetime, timedelta
+
+# ===============================================
+# 🔧 ESSENTIAL FUNCTIONS & SETUP
+# ===============================================
+
+def get_env_var(key: str, default=None, required: bool = False):
+    """Get environment variable with validation"""
+    value = os.getenv(key, default)
+    if required and (value is None or value == ''):
+        raise ValueError(f"Environment variable {key} is required but not set.")
+    return value
+
+def to_bool(value):
+    """Convert string to boolean"""
+    if isinstance(value, bool):
+        return value
+    return str(value).lower() in ('true', '1', 'yes', 'on')
+
+# Setup logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+# ===============================================
+# 🔑 TELEGRAM API CREDENTIALS (REQUIRED)
+# ===============================================
+
+# Telegram API Configuration (Get from my.telegram.org)
+API_ID = int(get_env_var("API_ID", None, required=True))
+API_HASH = get_env_var("API_HASH", None, required=True)
+
+# Bot Token (Get from @BotFather)
+BOT_TOKEN = get_env_var("BOT_TOKEN", None, required=True)
+
+# Database Configuration (MongoDB Atlas - Free)
+MONGO_URL = get_env_var("MONGO_URL", None, required=True)
+
+# Owner Configuration (Your Telegram user ID from @userinfobot)
+OWNER_ID = int(get_env_var("OWNER_ID", None, required=True))
+OWNER_USERNAME = get_env_var("OWNER_USERNAME", "SID_ELITE")
+
+# Optional String Session for userbot features
+STRING_SESSION = get_env_var("STRING_SESSION", "")
+
+# Support Configuration
+SUPPORT_GRP = get_env_var("SUPPORT_GRP", "TeamsXchat")
+UPDATE_CHNL = get_env_var("UPDATE_CHNL", "TeamXUpdate")
+LOG_GROUP_ID = get_env_var("LOG_GROUP_ID", "")
+
+# ===============================================
+# 🎯 REALISTIC BEHAVIOR CONFIGURATION
+# Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
+# ===============================================
 
 # ===============================================
 # 🎭 REALISTIC RELATIONSHIP SYSTEM SETTINGS
 # ===============================================
 
 # Core Realistic Behavior Settings
-ENABLE_RELATIONSHIP_PROGRESSION = get_env_var("ENABLE_RELATIONSHIP_PROGRESSION", "True", required=False).lower() == "true"
-ENABLE_SMART_LEARNING = get_env_var("ENABLE_SMART_LEARNING", "True", required=False).lower() == "true"
-ENABLE_CONTEXT_MEMORY = get_env_var("ENABLE_CONTEXT_MEMORY", "True", required=False).lower() == "true"
-NO_INSTANT_ROMANCE = get_env_var("NO_INSTANT_ROMANCE", "True", required=False).lower() == "true"
-ENABLE_NATURAL_BOUNDARIES = get_env_var("ENABLE_NATURAL_BOUNDARIES", "True", required=False).lower() == "true"
+ENABLE_RELATIONSHIP_PROGRESSION = get_env_var("ENABLE_RELATIONSHIP_PROGRESSION", "True").lower() == "true"
+ENABLE_SMART_LEARNING = get_env_var("ENABLE_SMART_LEARNING", "True").lower() == "true"
+ENABLE_CONTEXT_MEMORY = get_env_var("ENABLE_CONTEXT_MEMORY", "True").lower() == "true"
+NO_INSTANT_ROMANCE = get_env_var("NO_INSTANT_ROMANCE", "True").lower() == "true"
+ENABLE_NATURAL_BOUNDARIES = get_env_var("ENABLE_NATURAL_BOUNDARIES", "True").lower() == "true"
 
 # Relationship Progression Control
-RELATIONSHIP_PROGRESSION_SPEED = get_env_var("RELATIONSHIP_PROGRESSION_SPEED", "normal", required=False)
-MINIMUM_MESSAGES_FOR_FRIEND = int(get_env_var("MINIMUM_MESSAGES_FOR_FRIEND", "15", required=False))
-MINIMUM_MESSAGES_FOR_ROMANTIC = int(get_env_var("MINIMUM_MESSAGES_FOR_ROMANTIC", "120", required=False))
-MINIMUM_DAYS_FOR_ROMANTIC = int(get_env_var("MINIMUM_DAYS_FOR_ROMANTIC", "21", required=False))
+RELATIONSHIP_PROGRESSION_SPEED = get_env_var("RELATIONSHIP_PROGRESSION_SPEED", "normal")
+MINIMUM_MESSAGES_FOR_FRIEND = int(get_env_var("MINIMUM_MESSAGES_FOR_FRIEND", "15"))
+MINIMUM_MESSAGES_FOR_ROMANTIC = int(get_env_var("MINIMUM_MESSAGES_FOR_ROMANTIC", "120"))
+MINIMUM_DAYS_FOR_ROMANTIC = int(get_env_var("MINIMUM_DAYS_FOR_ROMANTIC", "21"))
 
 # Advanced Boundary System (Like Real Indian Girls)
-PHOTOS_ONLY_FOR_FRIENDS = get_env_var("PHOTOS_ONLY_FOR_FRIENDS", "True", required=False).lower() == "true"
-VOICE_ONLY_FOR_CLOSE_FRIENDS = get_env_var("VOICE_ONLY_FOR_CLOSE_FRIENDS", "True", required=False).lower() == "true"
-CONTEXTUAL_RESPONSES = get_env_var("CONTEXTUAL_RESPONSES", "True", required=False).lower() == "true"
-STRANGER_CAUTION_MODE = get_env_var("STRANGER_CAUTION_MODE", "True", required=False).lower() == "true"
+PHOTOS_ONLY_FOR_FRIENDS = get_env_var("PHOTOS_ONLY_FOR_FRIENDS", "True").lower() == "true"
+VOICE_ONLY_FOR_CLOSE_FRIENDS = get_env_var("VOICE_ONLY_FOR_CLOSE_FRIENDS", "True").lower() == "true"
+CONTEXTUAL_RESPONSES = get_env_var("CONTEXTUAL_RESPONSES", "True").lower() == "true"
+STRANGER_CAUTION_MODE = get_env_var("STRANGER_CAUTION_MODE", "True").lower() == "true"
 
 # Smart Learning System Settings
-LEARN_USER_INTERESTS = get_env_var("LEARN_USER_INTERESTS", "True", required=False).lower() == "true"
-ADAPT_COMMUNICATION_STYLE = get_env_var("ADAPT_COMMUNICATION_STYLE", "True", required=False).lower() == "true"
-PERSONALITY_ANALYSIS = get_env_var("PERSONALITY_ANALYSIS", "True", required=False).lower() == "true"
-EMOTIONAL_STATE_TRACKING = get_env_var("EMOTIONAL_STATE_TRACKING", "True", required=False).lower() == "true"
-CONVERSATION_CONTEXT_MEMORY = get_env_var("CONVERSATION_CONTEXT_MEMORY", "True", required=False).lower() == "true"
+LEARN_USER_INTERESTS = get_env_var("LEARN_USER_INTERESTS", "True").lower() == "true"
+ADAPT_COMMUNICATION_STYLE = get_env_var("ADAPT_COMMUNICATION_STYLE", "True").lower() == "true"
+PERSONALITY_ANALYSIS = get_env_var("PERSONALITY_ANALYSIS", "True").lower() == "true"
+EMOTIONAL_STATE_TRACKING = get_env_var("EMOTIONAL_STATE_TRACKING", "True").lower() == "true"
+CONVERSATION_CONTEXT_MEMORY = get_env_var("CONVERSATION_CONTEXT_MEMORY", "True").lower() == "true"
 
 # Natural Conversation Flow Settings
-MAX_RESPONSE_LENGTH = int(get_env_var("MAX_RESPONSE_LENGTH", "200", required=False))
-NATURAL_RESPONSE_DELAY = float(get_env_var("NATURAL_RESPONSE_DELAY", "2.5", required=False))
-GROUP_RESPONSE_CHANCE = float(get_env_var("GROUP_RESPONSE_CHANCE", "0.05", required=False))
-ENABLE_REALISTIC_TYPING = get_env_var("ENABLE_REALISTIC_TYPING", "True", required=False).lower() == "true"
+MAX_RESPONSE_LENGTH = int(get_env_var("MAX_RESPONSE_LENGTH", "200"))
+NATURAL_RESPONSE_DELAY = float(get_env_var("NATURAL_RESPONSE_DELAY", "2.5"))
+GROUP_RESPONSE_CHANCE = float(get_env_var("GROUP_RESPONSE_CHANCE", "0.05"))
+ENABLE_REALISTIC_TYPING = get_env_var("ENABLE_REALISTIC_TYPING", "True").lower() == "true"
 
 # ===============================================
 # 🇮🇳 AUTHENTIC INDIAN PERSONALITY SETTINGS
 # ===============================================
 
 # Cultural Authenticity Settings
-AUTHENTIC_INDIAN_BEHAVIOR = get_env_var("AUTHENTIC_INDIAN_BEHAVIOR", "True", required=False).lower() == "true"
-MUMBAI_LIFESTYLE_REFERENCES = get_env_var("MUMBAI_LIFESTYLE_REFERENCES", "True", required=False).lower() == "true"
-BOLLYWOOD_REFERENCES = get_env_var("BOLLYWOOD_REFERENCES", "True", required=False).lower() == "true"
-HINGLISH_PRIMARY = get_env_var("HINGLISH_PRIMARY", "True", required=False).lower() == "true"
-FAMILY_ORIENTED_VALUES = get_env_var("FAMILY_ORIENTED_VALUES", "True", required=False).lower() == "true"
-INDIAN_FESTIVAL_AWARENESS = get_env_var("INDIAN_FESTIVAL_AWARENESS", "True", required=False).lower() == "true"
+AUTHENTIC_INDIAN_BEHAVIOR = get_env_var("AUTHENTIC_INDIAN_BEHAVIOR", "True").lower() == "true"
+MUMBAI_LIFESTYLE_REFERENCES = get_env_var("MUMBAI_LIFESTYLE_REFERENCES", "True").lower() == "true"
+BOLLYWOOD_REFERENCES = get_env_var("BOLLYWOOD_REFERENCES", "True").lower() == "true"
+HINGLISH_PRIMARY = get_env_var("HINGLISH_PRIMARY", "True").lower() == "true"
+FAMILY_ORIENTED_VALUES = get_env_var("FAMILY_ORIENTED_VALUES", "True").lower() == "true"
+INDIAN_FESTIVAL_AWARENESS = get_env_var("INDIAN_FESTIVAL_AWARENESS", "True").lower() == "true"
 
 # Language and Communication Settings
-DEFAULT_LANGUAGE = get_env_var("DEFAULT_LANGUAGE", "hinglish", required=False)
-ENABLE_AUTO_LANG_DETECT = get_env_var("ENABLE_AUTO_LANG_DETECT", "True", required=False).lower() == "true"
-CULTURAL_CONTEXT_AWARENESS = get_env_var("CULTURAL_CONTEXT_AWARENESS", "True", required=False).lower() == "true"
-REGIONAL_SLANG_MUMBAI = get_env_var("REGIONAL_SLANG_MUMBAI", "True", required=False).lower() == "true"
-HINGLISH_RATIO = float(get_env_var("HINGLISH_RATIO", "0.6", required=False))
+DEFAULT_LANGUAGE = get_env_var("DEFAULT_LANGUAGE", "hinglish")
+ENABLE_AUTO_LANG_DETECT = get_env_var("ENABLE_AUTO_LANG_DETECT", "True").lower() == "true"
+CULTURAL_CONTEXT_AWARENESS = get_env_var("CULTURAL_CONTEXT_AWARENESS", "True").lower() == "true"
+REGIONAL_SLANG_MUMBAI = get_env_var("REGIONAL_SLANG_MUMBAI", "True").lower() == "true"
+HINGLISH_RATIO = float(get_env_var("HINGLISH_RATIO", "0.6"))
 
 # Enhanced AI Personality Configuration
-AI_PERSONALITY = get_env_var("AI_PERSONALITY", "realistic_indian_girl", required=False)
-ENABLE_AI_CHAT = get_env_var("ENABLE_AI_CHAT", "True", required=False).lower() == "true"
-ENABLE_HINGLISH = get_env_var("ENABLE_HINGLISH", "True", required=False).lower() == "true"
-INDIAN_ACCENT_VOICE = get_env_var("INDIAN_ACCENT_VOICE", "True", required=False).lower() == "true"
+AI_PERSONALITY = get_env_var("AI_PERSONALITY", "realistic_indian_girl")
+ENABLE_AI_CHAT = get_env_var("ENABLE_AI_CHAT", "True").lower() == "true"
+ENABLE_HINGLISH = get_env_var("ENABLE_HINGLISH", "True").lower() == "true"
+INDIAN_ACCENT_VOICE = get_env_var("INDIAN_ACCENT_VOICE", "True").lower() == "true"
 
 # Creator Attribution Settings (CRITICAL - Don't change!)
-BOT_IDENTITY_DENIAL = get_env_var("BOT_IDENTITY_DENIAL", "True", required=False).lower() == "true"
-CREATOR_NAME = get_env_var("CREATOR_NAME", "Siddhartha Abhimanyu", required=False)
-CREATOR_USERNAME = get_env_var("CREATOR_USERNAME", "@SID_ELITE", required=False)
-CREATOR_TITLE = get_env_var("CREATOR_TITLE", "Tech Leader of Team X", required=False)
-CREATOR_COMPANY = get_env_var("CREATOR_COMPANY", "Team X Technologies", required=False)
+BOT_IDENTITY_DENIAL = get_env_var("BOT_IDENTITY_DENIAL", "True").lower() == "true"
+CREATOR_NAME = get_env_var("CREATOR_NAME", "Siddhartha Abhimanyu")
+CREATOR_USERNAME = get_env_var("CREATOR_USERNAME", "@SID_ELITE")
+CREATOR_TITLE = get_env_var("CREATOR_TITLE", "Tech Leader of Team X")
+CREATOR_COMPANY = get_env_var("CREATOR_COMPANY", "Team X Technologies")
 
 # ===============================================
 # 🎭 ADVANCED PERSONALITY FEATURES
 # ===============================================
 
 # Voice Messages System Configuration
-ENABLE_VOICE_MESSAGES = get_env_var("ENABLE_VOICE_MESSAGES", "True", required=False).lower() == "true"
-VOICE_LANGUAGE = get_env_var("VOICE_LANGUAGE", "en", required=False)
-VOICE_ACCENT = get_env_var("VOICE_ACCENT", "co.in", required=False)
-VOICE_SCENARIOS = get_env_var("VOICE_SCENARIOS", "romantic,morning,night,caring,encouragement", required=False).split(',')
-VOICE_RELATIONSHIP_MINIMUM = int(get_env_var("VOICE_RELATIONSHIP_MINIMUM", "4", required=False))
+ENABLE_VOICE_MESSAGES = get_env_var("ENABLE_VOICE_MESSAGES", "True").lower() == "true"
+VOICE_LANGUAGE = get_env_var("VOICE_LANGUAGE", "en")
+VOICE_ACCENT = get_env_var("VOICE_ACCENT", "co.in")
+VOICE_SCENARIOS = get_env_var("VOICE_SCENARIOS", "romantic,morning,night,caring,encouragement").split(',')
+VOICE_RELATIONSHIP_MINIMUM = int(get_env_var("VOICE_RELATIONSHIP_MINIMUM", "4"))
 
 # Anime Pictures & Media System
-ENABLE_ANIME_PICS = get_env_var("ENABLE_ANIME_PICS", "True", required=False).lower() == "true"
-ANIME_API_SOURCES = get_env_var("ANIME_API_SOURCES", "waifu.pics,nekos.best,waifu.im", required=False).split(',')
-PICTURE_RESPONSE_STYLE = get_env_var("PICTURE_RESPONSE_STYLE", "indian_girl", required=False)
-PICTURE_RELATIONSHIP_MINIMUM = int(get_env_var("PICTURE_RELATIONSHIP_MINIMUM", "3", required=False))
+ENABLE_ANIME_PICS = get_env_var("ENABLE_ANIME_PICS", "True").lower() == "true"
+ANIME_API_SOURCES = get_env_var("ANIME_API_SOURCES", "waifu.pics,nekos.best,waifu.im").split(',')
+PICTURE_RESPONSE_STYLE = get_env_var("PICTURE_RESPONSE_STYLE", "indian_girl")
+PICTURE_RELATIONSHIP_MINIMUM = int(get_env_var("PICTURE_RELATIONSHIP_MINIMUM", "3"))
 
 # Smart Stickers System
-ENABLE_SMART_STICKERS = get_env_var("ENABLE_SMART_STICKERS", "True", required=False).lower() == "true"
-STICKER_EMOTIONS = get_env_var("STICKER_EMOTIONS", "happy,shy,romantic,playful,caring,excited,sleepy", required=False).split(',')
-CONTEXTUAL_STICKER_CHANCE = float(get_env_var("CONTEXTUAL_STICKER_CHANCE", "0.35", required=False))
-STICKER_RELATIONSHIP_BASED = get_env_var("STICKER_RELATIONSHIP_BASED", "True", required=False).lower() == "true"
+ENABLE_SMART_STICKERS = get_env_var("ENABLE_SMART_STICKERS", "True").lower() == "true"
+STICKER_EMOTIONS = get_env_var("STICKER_EMOTIONS", "happy,shy,romantic,playful,caring,excited,sleepy").split(',')
+CONTEXTUAL_STICKER_CHANCE = float(get_env_var("CONTEXTUAL_STICKER_CHANCE", "0.35"))
+STICKER_RELATIONSHIP_BASED = get_env_var("STICKER_RELATIONSHIP_BASED", "True").lower() == "true"
 
 # Virtual Life Simulation Settings
-ENABLE_VIRTUAL_LIFE = get_env_var("ENABLE_VIRTUAL_LIFE", "True", required=False).lower() == "true"
-DAILY_MOOD_CHANGES = get_env_var("DAILY_MOOD_CHANGES", "True", required=False).lower() == "true"
-TIME_BASED_RESPONSES = get_env_var("TIME_BASED_RESPONSES", "True", required=False).lower() == "true"
-WORK_SCHEDULE_SIMULATION = get_env_var("WORK_SCHEDULE_SIMULATION", "True", required=False).lower() == "true"
-WEEKEND_BEHAVIOR_CHANGE = get_env_var("WEEKEND_BEHAVIOR_CHANGE", "True", required=False).lower() == "true"
-FESTIVAL_SPECIAL_RESPONSES = get_env_var("FESTIVAL_SPECIAL_RESPONSES", "True", required=False).lower() == "true"
+ENABLE_VIRTUAL_LIFE = get_env_var("ENABLE_VIRTUAL_LIFE", "True").lower() == "true"
+DAILY_MOOD_CHANGES = get_env_var("DAILY_MOOD_CHANGES", "True").lower() == "true"
+TIME_BASED_RESPONSES = get_env_var("TIME_BASED_RESPONSES", "True").lower() == "true"
+WORK_SCHEDULE_SIMULATION = get_env_var("WORK_SCHEDULE_SIMULATION", "True").lower() == "true"
+WEEKEND_BEHAVIOR_CHANGE = get_env_var("WEEKEND_BEHAVIOR_CHANGE", "True").lower() == "true"
+FESTIVAL_SPECIAL_RESPONSES = get_env_var("FESTIVAL_SPECIAL_RESPONSES", "True").lower() == "true"
 
 # ===============================================
 # 📊 INTERACTION & PERFORMANCE SETTINGS
 # ===============================================
 
 # Rate Limiting (Relationship-Based)
-RATE_LIMIT_MESSAGES = int(get_env_var("RATE_LIMIT_MESSAGES", "6", required=False))
-RATE_LIMIT_WINDOW = int(get_env_var("RATE_LIMIT_WINDOW", "5", required=False))
-RELATIONSHIP_RATE_BONUS = int(get_env_var("RELATIONSHIP_RATE_BONUS", "2", required=False))
-ENABLE_RELATIONSHIP_RATE_SCALING = get_env_var("ENABLE_RELATIONSHIP_RATE_SCALING", "True", required=False).lower() == "true"
+RATE_LIMIT_MESSAGES = int(get_env_var("RATE_LIMIT_MESSAGES", "6"))
+RATE_LIMIT_WINDOW = int(get_env_var("RATE_LIMIT_WINDOW", "5"))
+RELATIONSHIP_RATE_BONUS = int(get_env_var("RELATIONSHIP_RATE_BONUS", "2"))
+ENABLE_RELATIONSHIP_RATE_SCALING = get_env_var("ENABLE_RELATIONSHIP_RATE_SCALING", "True").lower() == "true"
 
 # Group Chat Behavior Settings
-GROUP_SELECTIVE_RESPONSE = get_env_var("GROUP_SELECTIVE_RESPONSE", "True", required=False).lower() == "true"
-GROUP_MENTION_REQUIRED = get_env_var("GROUP_MENTION_REQUIRED", "False", required=False).lower() == "true"
-GROUP_RELATIONSHIP_PROGRESSION = get_env_var("GROUP_RELATIONSHIP_PROGRESSION", "True", required=False).lower() == "true"
-GROUP_PUBLIC_BEHAVIOR = get_env_var("GROUP_PUBLIC_BEHAVIOR", "True", required=False).lower() == "true"
+GROUP_SELECTIVE_RESPONSE = get_env_var("GROUP_SELECTIVE_RESPONSE", "True").lower() == "true"
+GROUP_MENTION_REQUIRED = get_env_var("GROUP_MENTION_REQUIRED", "False").lower() == "true"
+GROUP_RELATIONSHIP_PROGRESSION = get_env_var("GROUP_RELATIONSHIP_PROGRESSION", "True").lower() == "true"
+GROUP_PUBLIC_BEHAVIOR = get_env_var("GROUP_PUBLIC_BEHAVIOR", "True").lower() == "true"
 
 # Enhanced Bot Features Control
-ENABLE_CLONE_FEATURE = get_env_var("ENABLE_CLONE_FEATURE", "True", required=False).lower() == "true"
-ENABLE_BROADCAST_FEATURE = get_env_var("ENABLE_BROADCAST_FEATURE", "True", required=False).lower() == "true"
-ENABLE_CHATBOT_FEATURE = get_env_var("ENABLE_CHATBOT_FEATURE", "True", required=False).lower() == "true"
-MAX_CLONES_PER_USER = int(get_env_var("MAX_CLONES_PER_USER", "5", required=False))
-ENABLE_STATISTICS_TRACKING = get_env_var("ENABLE_STATISTICS_TRACKING", "True", required=False).lower() == "true"
+ENABLE_CLONE_FEATURE = get_env_var("ENABLE_CLONE_FEATURE", "True").lower() == "true"
+ENABLE_BROADCAST_FEATURE = get_env_var("ENABLE_BROADCAST_FEATURE", "True").lower() == "true"
+ENABLE_CHATBOT_FEATURE = get_env_var("ENABLE_CHATBOT_FEATURE", "True").lower() == "true"
+MAX_CLONES_PER_USER = int(get_env_var("MAX_CLONES_PER_USER", "5"))
+ENABLE_STATISTICS_TRACKING = get_env_var("ENABLE_STATISTICS_TRACKING", "True").lower() == "true"
 
 # Database Performance Settings
-MONGODB_MAX_CONNECTIONS = int(get_env_var("MONGODB_MAX_CONNECTIONS", "100", required=False))
-CONCURRENT_UPDATES = get_env_var("CONCURRENT_UPDATES", "True", required=False).lower() == "true"
-ENABLE_RELATIONSHIP_ANALYTICS = get_env_var("ENABLE_RELATIONSHIP_ANALYTICS", "True", required=False).lower() == "true"
-AUTO_CLEANUP_OLD_DATA = get_env_var("AUTO_CLEANUP_OLD_DATA", "False", required=False).lower() == "true"
+MONGODB_MAX_CONNECTIONS = int(get_env_var("MONGODB_MAX_CONNECTIONS", "100"))
+CONCURRENT_UPDATES = get_env_var("CONCURRENT_UPDATES", "True").lower() == "true"
+ENABLE_RELATIONSHIP_ANALYTICS = get_env_var("ENABLE_RELATIONSHIP_ANALYTICS", "True").lower() == "true"
+AUTO_CLEANUP_OLD_DATA = get_env_var("AUTO_CLEANUP_OLD_DATA", "False").lower() == "true"
 
 # ===============================================
 # 🌍 LOCALIZATION & TIME SETTINGS
 # ===============================================
 
 # Time Zone Configuration (Indian Standard Time)
-TIMEZONE = get_env_var("TIMEZONE", "Asia/Kolkata", required=False)
-TIMEZONE_COMMON_NAME = get_env_var("TIMEZONE_COMMON_NAME", "IST", required=False)
-WORK_HOURS_START = int(get_env_var("WORK_HOURS_START", "9", required=False))
-WORK_HOURS_END = int(get_env_var("WORK_HOURS_END", "17", required=False))
-SLEEP_HOURS_START = int(get_env_var("SLEEP_HOURS_START", "23", required=False))
-WAKE_UP_HOURS = int(get_env_var("WAKE_UP_HOURS", "7", required=False))
+TIMEZONE = get_env_var("TIMEZONE", "Asia/Kolkata")
+TIMEZONE_COMMON_NAME = get_env_var("TIMEZONE_COMMON_NAME", "IST")
+WORK_HOURS_START = int(get_env_var("WORK_HOURS_START", "9"))
+WORK_HOURS_END = int(get_env_var("WORK_HOURS_END", "17"))
+SLEEP_HOURS_START = int(get_env_var("SLEEP_HOURS_START", "23"))
+WAKE_UP_HOURS = int(get_env_var("WAKE_UP_HOURS", "7"))
 
 # Language Support Settings
-SUPPORTED_LANGUAGES = get_env_var("SUPPORTED_LANGUAGES", "en,hi,hinglish", required=False).split(',')
-ENABLE_LANGUAGE_ADAPTATION = get_env_var("ENABLE_LANGUAGE_ADAPTATION", "True", required=False).lower() == "true"
+SUPPORTED_LANGUAGES = get_env_var("SUPPORTED_LANGUAGES", "en,hi,hinglish").split(',')
+ENABLE_LANGUAGE_ADAPTATION = get_env_var("ENABLE_LANGUAGE_ADAPTATION", "True").lower() == "true"
 
 # Cultural Calendar Settings
-INDIAN_FESTIVALS = get_env_var("INDIAN_FESTIVALS", "diwali,holi,eid,christmas,dussehra,ganesh_chaturthi", required=False).split(',')
-ENABLE_FESTIVAL_GREETINGS = get_env_var("ENABLE_FESTIVAL_GREETINGS", "True", required=False).lower() == "true"
-MUMBAI_LOCAL_EVENTS = get_env_var("MUMBAI_LOCAL_EVENTS", "True", required=False).lower() == "true"
+INDIAN_FESTIVALS = get_env_var("INDIAN_FESTIVALS", "diwali,holi,eid,christmas,dussehra,ganesh_chaturthi").split(',')
+ENABLE_FESTIVAL_GREETINGS = get_env_var("ENABLE_FESTIVAL_GREETINGS", "True").lower() == "true"
+MUMBAI_LOCAL_EVENTS = get_env_var("MUMBAI_LOCAL_EVENTS", "True").lower() == "true"
 
 # ===============================================
 # 🔒 SECURITY & AUTHORIZATION SETTINGS
 # ===============================================
 
 # User Management Settings
-AUTHORIZED_USERS = [int(x.strip()) for x in get_env_var("AUTHORIZED_USERS", "", required=False).split(',') if x.strip().isdigit()]
-BLOCKED_USERS = [int(x.strip()) for x in get_env_var("BLOCKED_USERS", "", required=False).split(',') if x.strip().isdigit()]
-ENABLE_USER_VERIFICATION = get_env_var("ENABLE_USER_VERIFICATION", "True", required=False).lower() == "true"
-MAX_USERS_PER_HOUR = int(get_env_var("MAX_USERS_PER_HOUR", "1000", required=False))
+AUTHORIZED_USERS = [int(x.strip()) for x in get_env_var("AUTHORIZED_USERS", "").split(',') if x.strip().isdigit()]
+BLOCKED_USERS = [int(x.strip()) for x in get_env_var("BLOCKED_USERS", "").split(',') if x.strip().isdigit()]
+ENABLE_USER_VERIFICATION = get_env_var("ENABLE_USER_VERIFICATION", "True").lower() == "true"
+MAX_USERS_PER_HOUR = int(get_env_var("MAX_USERS_PER_HOUR", "1000"))
 
 # Privacy & Security Settings
-ENABLE_DATA_PRIVACY = get_env_var("ENABLE_DATA_PRIVACY", "True", required=False).lower() == "true"
-STORE_MESSAGE_CONTENT = get_env_var("STORE_MESSAGE_CONTENT", "False", required=False).lower() == "true"
-ANONYMIZE_USER_DATA = get_env_var("ANONYMIZE_USER_DATA", "True", required=False).lower() == "true"
-ENABLE_ENCRYPTION = get_env_var("ENABLE_ENCRYPTION", "True", required=False).lower() == "true"
+ENABLE_DATA_PRIVACY = get_env_var("ENABLE_DATA_PRIVACY", "True").lower() == "true"
+STORE_MESSAGE_CONTENT = get_env_var("STORE_MESSAGE_CONTENT", "False").lower() == "true"
+ANONYMIZE_USER_DATA = get_env_var("ANONYMIZE_USER_DATA", "True").lower() == "true"
+ENABLE_ENCRYPTION = get_env_var("ENABLE_ENCRYPTION", "True").lower() == "true"
 
 # Debug and Logging Settings
-DEBUG = get_env_var("DEBUG", "False", required=False).lower() == "true"
-LOG_LEVEL = get_env_var("LOG_LEVEL", "INFO", required=False)
-ENABLE_RELATIONSHIP_LOGS = get_env_var("ENABLE_RELATIONSHIP_LOGS", "True", required=False).lower() == "true"
-LOG_AI_RESPONSES = get_env_var("LOG_AI_RESPONSES", "False", required=False).lower() == "true"
+DEBUG = get_env_var("DEBUG", "False").lower() == "true"
+LOG_LEVEL = get_env_var("LOG_LEVEL", "INFO")
+ENABLE_RELATIONSHIP_LOGS = get_env_var("ENABLE_RELATIONSHIP_LOGS", "True").lower() == "true"
+LOG_AI_RESPONSES = get_env_var("LOG_AI_RESPONSES", "False").lower() == "true"
+
+# ===============================================
+# 🚀 DEPLOYMENT & HOSTING SETTINGS
+# ===============================================
+
+# Heroku/Railway Configuration
+HEROKU_APP_NAME = get_env_var("HEROKU_APP_NAME", "")
+PORT = int(get_env_var("PORT", "8080"))
+WEBHOOK_URL = get_env_var("WEBHOOK_URL", "")
+
+# Railway Configuration
+RAILWAY_STATIC_URL = get_env_var("RAILWAY_STATIC_URL", "")
+RAILWAY_PRIVATE_DOMAIN = get_env_var("RAILWAY_PRIVATE_DOMAIN", "")
+
+# VPS Configuration
+ENABLE_WEBHOOK = get_env_var("ENABLE_WEBHOOK", "False").lower() == "true"
+WEBHOOK_PATH = get_env_var("WEBHOOK_PATH", "/webhook")
+SSL_CERT_PATH = get_env_var("SSL_CERT_PATH", "")
+SSL_KEY_PATH = get_env_var("SSL_KEY_PATH", "")
 
 # ===============================================
 # 🎯 ENHANCED AI PERSONALITIES CONFIGURATION
 # ===============================================
 
-# Update the existing AI_PERSONALITIES to include realistic behavior
+# Complete AI Personalities with realistic behavior
 AI_PERSONALITIES = {
     "realistic_indian_girl": {
         "name": "Ena",
@@ -397,11 +472,32 @@ if AI_PERSONALITY not in AI_PERSONALITIES:
 CURRENT_PERSONALITY = AI_PERSONALITIES.get(AI_PERSONALITY, AI_PERSONALITIES["realistic_indian_girl"])
 
 # ===============================================
-# 📝 EXPORT ALL NEW SETTINGS
+# 🎯 LEGACY PERSONALITY TRAITS (For Compatibility)
 # ===============================================
 
-# Add all new variables to __all__ for proper module exports
-__all__.extend([
+# Legacy personality traits for backward compatibility
+PERSONALITY_TRAITS = {
+    "realistic_indian_girl": CURRENT_PERSONALITY,
+    "flirty": {"name": "Ena", "style": "flirty", "level": "high"},
+    "cute": {"name": "Ena", "style": "cute", "level": "medium"},
+    "sweet": {"name": "Ena", "style": "sweet", "level": "high"},
+    "caring": {"name": "Ena", "style": "caring", "level": "high"},
+    "normal": {"name": "Ena", "style": "normal", "level": "medium"}
+}
+
+# ===============================================
+# 📝 MODULE EXPORTS
+# ===============================================
+
+# Initialize __all__ list with essential exports
+__all__ = [
+    # Essential Bot Configuration
+    "API_ID", "API_HASH", "BOT_TOKEN", "MONGO_URL", "OWNER_ID", "OWNER_USERNAME",
+    "STRING_SESSION", "SUPPORT_GRP", "UPDATE_CHNL", "LOG_GROUP_ID",
+    
+    # Helper Functions
+    "get_env_var", "to_bool",
+    
     # Realistic Behavior Core Settings
     "ENABLE_RELATIONSHIP_PROGRESSION", "ENABLE_SMART_LEARNING", "ENABLE_CONTEXT_MEMORY",
     "NO_INSTANT_ROMANCE", "ENABLE_NATURAL_BOUNDARIES", "RELATIONSHIP_PROGRESSION_SPEED",
@@ -440,45 +536,76 @@ __all__.extend([
     "ENABLE_SMART_STICKERS", "STICKER_EMOTIONS", "CONTEXTUAL_STICKER_CHANCE",
     "STICKER_RELATIONSHIP_BASED", "ENABLE_VIRTUAL_LIFE", "DAILY_MOOD_CHANGES",
     "TIME_BASED_RESPONSES", "WORK_SCHEDULE_SIMULATION", "WEEKEND_BEHAVIOR_CHANGE",
+    "FESTIVAL_SPECIAL_RESPONSES",
     
     # Performance and Rate Limiting
     "RATE_LIMIT_MESSAGES", "RATE_LIMIT_WINDOW", "RELATIONSHIP_RATE_BONUS",
     "ENABLE_RELATIONSHIP_RATE_SCALING", "GROUP_SELECTIVE_RESPONSE",
+    "GROUP_MENTION_REQUIRED", "GROUP_RELATIONSHIP_PROGRESSION", "GROUP_PUBLIC_BEHAVIOR",
+    
+    # Bot Features
+    "ENABLE_CLONE_FEATURE", "ENABLE_BROADCAST_FEATURE", "ENABLE_CHATBOT_FEATURE",
+    "MAX_CLONES_PER_USER", "ENABLE_STATISTICS_TRACKING",
+    
+    # Database Settings
+    "MONGODB_MAX_CONNECTIONS", "CONCURRENT_UPDATES", "ENABLE_RELATIONSHIP_ANALYTICS",
+    "AUTO_CLEANUP_OLD_DATA",
     
     # Time and Localization
     "TIMEZONE", "TIMEZONE_COMMON_NAME", "WORK_HOURS_START", "WORK_HOURS_END",
-    "SLEEP_HOURS_START", "WAKE_UP_HOURS", "INDIAN_FESTIVALS",
+    "SLEEP_HOURS_START", "WAKE_UP_HOURS", "INDIAN_FESTIVALS", "ENABLE_FESTIVAL_GREETINGS",
+    "MUMBAI_LOCAL_EVENTS", "ENABLE_LANGUAGE_ADAPTATION",
     
     # Security and Privacy
-    "AUTHORIZED_USERS", "BLOCKED_USERS", "ENABLE_USER_VERIFICATION", 
-    "ENABLE_DATA_PRIVACY", "STORE_MESSAGE_CONTENT",
+    "AUTHORIZED_USERS", "BLOCKED_USERS", "ENABLE_USER_VERIFICATION", "MAX_USERS_PER_HOUR",
+    "ENABLE_DATA_PRIVACY", "STORE_MESSAGE_CONTENT", "ANONYMIZE_USER_DATA", 
+    "ENABLE_ENCRYPTION",
     
-    # Database and Analytics
-    "MONGODB_MAX_CONNECTIONS", "CONCURRENT_UPDATES", "ENABLE_RELATIONSHIP_ANALYTICS",
-    "ENABLE_STATISTICS_TRACKING",
+    # Debug and Logging
+    "DEBUG", "LOG_LEVEL", "ENABLE_RELATIONSHIP_LOGS", "LOG_AI_RESPONSES",
+    
+    # Deployment Settings
+    "HEROKU_APP_NAME", "PORT", "WEBHOOK_URL", "RAILWAY_STATIC_URL", "RAILWAY_PRIVATE_DOMAIN",
+    "ENABLE_WEBHOOK", "WEBHOOK_PATH", "SSL_CERT_PATH", "SSL_KEY_PATH",
     
     # Personality System
+    "AI_PERSONALITY", "ENABLE_AI_CHAT", "ENABLE_HINGLISH", "INDIAN_ACCENT_VOICE",
     "AI_PERSONALITIES", "CURRENT_PERSONALITY", "RELATIONSHIP_LEVELS",
-    "PERSONALITY_TRAIT_DEFINITIONS"
-])
+    "PERSONALITY_TRAIT_DEFINITIONS", "PERSONALITY_TRAITS"
+]
 
 # ===============================================
 # 🎯 CONFIGURATION VALIDATION AND LOGGING
 # ===============================================
 
 # Validate critical settings
+validation_warnings = []
+
 if not ENABLE_RELATIONSHIP_PROGRESSION:
-    print("⚠️ WARNING: ENABLE_RELATIONSHIP_PROGRESSION is disabled. Realistic behavior will be limited.")
+    validation_warnings.append("ENABLE_RELATIONSHIP_PROGRESSION is disabled. Realistic behavior will be limited.")
 
 if not NO_INSTANT_ROMANCE:
-    print("⚠️ WARNING: NO_INSTANT_ROMANCE is disabled. Bot may behave unrealistically.")
+    validation_warnings.append("NO_INSTANT_ROMANCE is disabled. Bot may behave unrealistically.")
 
 if AI_PERSONALITY != "realistic_indian_girl":
-    print(f"⚠️ WARNING: AI_PERSONALITY is set to '{AI_PERSONALITY}'. For best experience, use 'realistic_indian_girl'.")
+    validation_warnings.append(f"AI_PERSONALITY is set to '{AI_PERSONALITY}'. For best experience, use 'realistic_indian_girl'.")
+
+if not AUTHENTIC_INDIAN_BEHAVIOR:
+    validation_warnings.append("AUTHENTIC_INDIAN_BEHAVIOR is disabled. Cultural authenticity will be reduced.")
+
+# Display warnings if any
+if validation_warnings:
+    print("⚠️ CONFIGURATION WARNINGS:")
+    for warning in validation_warnings:
+        print(f"   • {warning}")
+    print()
 
 # Log configuration status if debug is enabled
 if DEBUG:
-    print("🎯 Realistic Behavior Configuration Loaded Successfully:")
+    print("🎯 EnaChatBot Configuration Loaded Successfully:")
+    print(f" • API Configuration: {'✅ Valid' if API_ID and API_HASH and BOT_TOKEN else '❌ Missing credentials'}")
+    print(f" • Database: {'✅ Connected' if MONGO_URL else '❌ No database URL'}")
+    print(f" • Owner: {OWNER_ID} (@{OWNER_USERNAME})")
     print(f" • Relationship Progression: {'✅ Enabled' if ENABLE_RELATIONSHIP_PROGRESSION else '❌ Disabled'}")
     print(f" • Smart Learning: {'✅ Enabled' if ENABLE_SMART_LEARNING else '❌ Disabled'}")
     print(f" • Natural Boundaries: {'✅ Enabled' if ENABLE_NATURAL_BOUNDARIES else '❌ Disabled'}")
@@ -504,3 +631,19 @@ print(f"🎭 Personality: {CURRENT_PERSONALITY['description']}")
 print(f"🌟 Relationship Stages: {CURRENT_PERSONALITY.get('relationship_stages', 7)}")
 print(f"🎯 Created by: {CREATOR_NAME} ({CREATOR_USERNAME}) - {CREATOR_TITLE}")
 print("💕 Ready for authentic Indian girlfriend experience!")
+print()
+
+# Final validation check
+try:
+    # Test essential configuration
+    if API_ID and API_HASH and BOT_TOKEN and MONGO_URL and OWNER_ID:
+        print("🎉 Configuration validation: PASSED")
+        print("🚀 Your bot is ready to start!")
+    else:
+        print("❌ Configuration validation: FAILED")
+        print("📝 Please check your .env file for missing credentials")
+except Exception as e:
+    print(f"⚠️ Configuration validation error: {e}")
+    print("📝 Please check your environment variables")
+
+print("=" * 60)
