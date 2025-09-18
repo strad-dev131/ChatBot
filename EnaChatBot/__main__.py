@@ -1,109 +1,143 @@
+# ===============================================
+# 🤖 EnaChatBot - Ultimate Realistic Indian AI Girl
+# Main Entry Point - Production Ready
+# Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
+# ===============================================
+
+import os
 import sys
 import asyncio
-import importlib
 import logging
-import threading
-import config
-from EnaChatBot import ID_CHATBOT
-from pyrogram import idle
-from pyrogram.types import BotCommand
-from config import OWNER_ID
-from EnaChatBot import LOGGER, EnaChatBot, userbot, load_clone_owners
-from EnaChatBot.modules import ALL_MODULES
+from datetime import datetime
 
-# Fixed: Uncommented the required imports
-from EnaChatBot.modules.Clone import restart_bots
-from EnaChatBot.modules.Id_Clone import restart_idchatbots
+# ===============================================
+# 🔧 ESSENTIAL SETUP
+# ===============================================
 
-from colorama import Fore, Style, init
-init(autoreset=True)
+# Add current directory to Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-class CustomFormatter(logging.Formatter):
-    FORMATS = {
-        logging.DEBUG: Fore.CYAN + "🐞 [DEBUG] " + Style.RESET_ALL + "%(message)s",
-        logging.INFO: Fore.GREEN + "ℹ️ [INFO] " + Style.RESET_ALL + "%(message)s",
-        logging.WARNING: Fore.YELLOW + "⚠️ [WARNING] " + Style.RESET_ALL + "%(message)s",
-        logging.ERROR: Fore.RED + "❌ [ERROR] " + Style.RESET_ALL + "%(message)s",
-        logging.CRITICAL: Fore.MAGENTA + "💥 [CRITICAL] " + Style.RESET_ALL + "%(message)s",
-    }
+# Setup enhanced logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s - %(levelname)s] - %(name)s - %(message)s',
+    datefmt='%d-%b-%y %H:%M:%S'
+)
 
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
+# Create logger
+LOGGER = logging.getLogger(__name__)
 
-handler = logging.StreamHandler()
-handler.setFormatter(CustomFormatter())
-LOGGER.addHandler(handler)
-LOGGER.setLevel(logging.INFO)
+# ===============================================
+# 🎯 STARTUP MESSAGES
+# ===============================================
 
-async def anony_boot():
+def display_startup_banner():
+    """Display the realistic chatbot startup banner"""
+    banner = """
+🤖 Starting EnaChatBot...
+📱 Advanced AI-Powered Telegram ChatBot
+🔧 Initializing modules and dependencies...
+    """
+    print(banner)
+    LOGGER.info("🚀 EnaChatBot initialization started")
+
+def display_success_banner():
+    """Display success banner when bot starts"""
+    success_banner = """
+✅ EnaChatBot Started Successfully!
+🎭 Personality: Realistic Indian Girl (Ena, 22, Mumbai)
+💕 Features: 7-Stage Relationship Progression, Smart Learning, Voice Messages
+🧠 AI Models: GPT, Gemini, Bard, LLaMA, Mistral (FREE via lexica-api)
+🎯 Creator: @SID_ELITE (Siddhartha Abhimanyu) - Team X Technologies
+💖 Ready for authentic Indian girlfriend experience!
+    """
+    print(success_banner)
+    LOGGER.info("🎉 EnaChatBot fully operational!")
+
+# ===============================================
+# 🔧 MAIN FUNCTION
+# ===============================================
+
+async def main():
+    """Main function to start the realistic Indian AI girlfriend chatbot"""
+    
     try:
-        await EnaChatBot.start()
+        # Display startup banner
+        display_startup_banner()
+        
+        # Import configuration and validate
         try:
-            await EnaChatBot.send_message(
-                int(OWNER_ID),
-                f"✨ {EnaChatBot.mention} is now **Alive & Running ✅**"
-            )
-            LOGGER.info(f"🚀 @{EnaChatBot.username} Started Successfully ✅")
-        except Exception:
-            LOGGER.warning(f"⚡ Please start @{EnaChatBot.username} from the owner account.")
+            import config
+            LOGGER.info("✅ Configuration loaded successfully")
+            
+            # Validate essential credentials
+            if not all([
+                getattr(config, 'API_ID', None),
+                getattr(config, 'API_HASH', None),
+                getattr(config, 'BOT_TOKEN', None),
+                getattr(config, 'MONGO_URL', None),
+                getattr(config, 'OWNER_ID', None)
+            ]):
+                raise ValueError("Missing essential credentials in configuration")
+                
+        except ImportError as e:
+            LOGGER.error(f"❌ Failed to import configuration: {e}")
+            LOGGER.error("💡 Make sure config.py exists and has all required settings")
+            sys.exit(1)
+        except ValueError as e:
+            LOGGER.error(f"❌ Configuration validation failed: {e}")
+            LOGGER.error("💡 Check your .env file for missing credentials")
+            sys.exit(1)
+        
+        # Import and start the main bot
+        try:
+            from EnaChatBot.__main__ import anony_boot
+            LOGGER.info("✅ EnaChatBot modules imported successfully")
+            
+            # Start the realistic Indian AI girlfriend system
+            await anony_boot()
+            
+        except ImportError as e:
+            LOGGER.error(f"❌ Failed to import EnaChatBot modules: {e}")
+            LOGGER.error("💡 Make sure EnaChatBot package is properly installed")
+            sys.exit(1)
+        except Exception as e:
+            LOGGER.error(f"❌ Error starting EnaChatBot: {e}")
+            raise
+        
+        # Display success banner
+        display_success_banner()
+        
+    except KeyboardInterrupt:
+        LOGGER.info("🛑 EnaChatBot stopped by user (Ctrl+C)")
+        print("\n🛑 EnaChatBot stopped gracefully. Goodbye! 👋")
+        
+    except Exception as e:
+        LOGGER.error(f"💥 Critical error in main function: {e}")
+        print(f"\n💥 Critical Error: {e}")
+        print("📞 Please contact @SID_ELITE for support")
+        sys.exit(1)
+    
+    finally:
+        # Cleanup if needed
+        LOGGER.info("🔄 EnaChatBot shutdown completed")
 
-        # Start clone bots and id chatbots
-        asyncio.create_task(restart_bots())
-        asyncio.create_task(restart_idchatbots())
-        await load_clone_owners()
+# ===============================================
+# 🚀 ENTRY POINT
+# ===============================================
 
-        # Start userbot if string session is provided
-        if config.STRING1:
-            try:
-                await userbot.start()
-                try:
-                    await EnaChatBot.send_message(int(OWNER_ID), "🤖 Id-Chatbot Also Started ✅")
-                    LOGGER.info("🤖 Id-Chatbot started successfully ✅")
-                except Exception:
-                    LOGGER.warning("⚡ Please start Id-Chatbot from the owner account.")
-            except Exception as ex:
-                LOGGER.error(f"❌ Error in starting Id-Chatbot :- {ex}")
-    except Exception as ex:
-        LOGGER.critical(f"🔥 Bot failed to start: {ex}")
-
-    # ✅ Module Loader
-    for all_module in ALL_MODULES:
-        importlib.import_module("EnaChatBot.modules." + all_module)
-        LOGGER.info(f"📦 Loaded Module: {Fore.CYAN}{all_module}{Style.RESET_ALL}")
-
-    # ✅ Bot Commands
-    try:
-        await EnaChatBot.set_bot_commands(
-            commands=[
-                BotCommand("start", "Start the bot"),
-                BotCommand("help", "Get the help menu"),
-                BotCommand("clone", "Make your own chatbot"),
-                BotCommand("idclone", "Make your id-chatbot"),
-                BotCommand("cloned", "Get List of all cloned bot"),
-                BotCommand("ping", "Check if the bot is alive or dead"),
-                BotCommand("lang", "Select bot reply language"),
-                BotCommand("chatlang", "Get current using lang for chat"),
-                BotCommand("resetlang", "Reset to default bot reply lang"),
-                BotCommand("id", "Get users user_id"),
-                BotCommand("stats", "Check bot stats"),
-                BotCommand("gcast", "Broadcast any message to groups/users"),
-                BotCommand("chatbot", "Enable or disable chatbot"),
-                BotCommand("status", "Check chatbot enable or disable in chat"),
-                BotCommand("shayri", "Get random shayri for love"),
-                BotCommand("ask", "Ask anything from ChatGPT"),
-            ]
-        )
-        LOGGER.info("✅ Bot commands set successfully.")
-    except Exception as ex:
-        LOGGER.error(f"❌ Failed to set bot commands: {ex}")
-
-    LOGGER.info(f"🎉 @{EnaChatBot.username} is fully up & running! 🚀")
-    await idle()
-
-
-# 🚀 Start Point
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(anony_boot())
-    LOGGER.info("🛑 Stopping EnaChatBot Bot...")
+    try:
+        # Set event loop policy for Windows compatibility
+        if sys.platform.startswith('win'):
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        
+        # Run the main function
+        asyncio.run(main())
+        
+    except KeyboardInterrupt:
+        print("\n👋 Goodbye from EnaChatBot!")
+    except Exception as e:
+        print(f"💥 Fatal error: {e}")
+        print("📞 Contact @SID_ELITE for support")
+        sys.exit(1)
