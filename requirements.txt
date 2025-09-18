@@ -65,9 +65,6 @@ motor==3.3.2
 # Redis (optional caching)
 redis==5.0.1
 
-# SQLite (backup database)
-sqlite3
-
 # Data serialization
 pickle-mixin==1.0.2
 
