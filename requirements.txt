@@ -203,19 +203,6 @@ tqdm==4.66.1
 pathlib2==2.3.7
 
 # ===============================================
-# 🔧 SYSTEM COMPATIBILITY
-# ===============================================
-
-# Windows compatibility
-pywin32==306; sys_platform == "win32"
-
-# Linux compatibility  
-python-linux-procfs; sys_platform == "linux"
-
-# macOS compatibility
-pyobjc==10.0; sys_platform == "darwin"
-
-# ===============================================
 # 🌟 ENHANCED FEATURES (OPTIONAL)
 # ===============================================
 
