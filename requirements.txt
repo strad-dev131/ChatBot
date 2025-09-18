@@ -1,31 +1,25 @@
-# EnaChatBot - Ultimate Realistic Indian AI Girl Requirements
-# Complete dependencies for the world's most realistic AI girlfriend
+# ===============================================
+# 🤖 EnaChatBot - Ultimate Realistic Indian AI Girl
+# Clean Requirements File - Python 3 Compatible
 # Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
+# ===============================================
 
 # ===============================================
 # 🔑 CORE TELEGRAM & BOT FRAMEWORK
 # ===============================================
-
+lexica-api
 # Pyrogram - Modern Telegram bot framework
 pyrogram==2.0.106
 TgCrypto==1.2.5
 
-# Alternative: python-telegram-bot (if needed)
-# python-telegram-bot==20.7
-
 # ===============================================
-# 🧠 AI & MACHINE LEARNING SYSTEMS
+# 🌐 HTTP & API REQUESTS
 # ===============================================
 
-# FREE AI via lexica-api (No API costs!)
-lexica-api
-
-# Natural Language Processing
-nltk==3.8.1
-spacy==3.7.2
-
-# Language Detection
-langdetect==1.0.9
+# HTTP requests for AI and anime pictures
+requests==2.31.0
+aiohttp==3.9.1
+httpx==0.25.2
 
 # ===============================================
 # 🗣️ VOICE & TEXT-TO-SPEECH SYSTEM
@@ -37,23 +31,6 @@ gTTS==2.4.0
 # Audio processing
 pydub==0.25.1
 
-# Speech recognition (optional)
-SpeechRecognition==3.10.0
-
-# ===============================================
-# 🌐 HTTP & API REQUESTS
-# ===============================================
-
-# HTTP requests for anime pictures and APIs
-requests==2.31.0
-httpx==0.25.2
-
-# Async HTTP client
-aiohttp==3.9.0
-
-# URL handling
-urllib3==2.1.0
-
 # ===============================================
 # 💾 DATABASE & DATA STORAGE
 # ===============================================
@@ -62,12 +39,6 @@ urllib3==2.1.0
 pymongo==4.6.0
 motor==3.3.2
 
-# Redis (optional caching)
-redis==5.0.1
-
-# Data serialization
-pickle-mixin==1.0.2
-
 # ===============================================
 # 🔧 ENVIRONMENT & CONFIGURATION
 # ===============================================
@@ -75,21 +46,12 @@ pickle-mixin==1.0.2
 # Environment variables (.env file support)
 python-dotenv==1.0.0
 
-# Configuration management
-python-decouple==3.8
-
 # ===============================================
 # ⏰ SCHEDULING & TASK MANAGEMENT
 # ===============================================
 
-# APScheduler for task scheduling
+# APScheduler for task scheduling and realistic behavior
 APScheduler==3.10.4
-
-# Async task queue
-celery==5.3.4
-
-# Background tasks
-asyncio-throttle==1.0.2
 
 # ===============================================
 # 🎭 PERSONALITY & BEHAVIOR SYSTEM
@@ -98,9 +60,6 @@ asyncio-throttle==1.0.2
 # Date and time handling (Indian timezone)
 pytz==2023.3
 python-dateutil==2.8.2
-
-# JSON handling for personality data
-jsonschema==4.20.0
 
 # Text processing for Hinglish
 regex==2023.10.3
@@ -116,9 +75,6 @@ emoji==2.8.0
 pandas==2.1.4
 numpy==1.24.4
 
-# Machine learning for user personality analysis
-scikit-learn==1.3.2
-
 # ===============================================
 # 🎨 IMAGE & MEDIA PROCESSING
 # ===============================================
@@ -126,33 +82,12 @@ scikit-learn==1.3.2
 # Image processing (for anime pictures)
 Pillow==10.1.0
 
-# Image requests and handling
-imageio==2.32.0
-
-# ===============================================
-# 🌐 WEB & DEPLOYMENT
-# ===============================================
-
-# Web framework (for webhooks)
-flask==3.0.0
-fastapi==0.104.1
-uvicorn==0.24.0
-
-# ASGI server
-gunicorn==21.2.0
-
 # ===============================================
 # 🔒 SECURITY & AUTHENTICATION
 # ===============================================
 
 # Cryptography for secure data
-cryptography
-
-# Password hashing
-bcrypt==4.1.2
-
-# JWT tokens (if needed)
-PyJWT==2.8.0
+cryptography==41.0.8
 
 # ===============================================
 # 📝 LOGGING & MONITORING
@@ -160,77 +95,16 @@ PyJWT==2.8.0
 
 # Enhanced logging
 colorlog==6.8.0
-structlog==23.2.0
-
-# System monitoring
-psutil==5.9.6
 
 # ===============================================
-# 🧪 TESTING & DEVELOPMENT
-# ===============================================
-
-# Testing framework
-pytest==7.4.3
-pytest-asyncio==0.21.1
-
-# Code formatting
-black==23.11.0
-
-# ===============================================
-# 🚀 DEPLOYMENT SPECIFIC
-# ===============================================
-
-# For Heroku deployment
-gunicorn==21.2.0
-
-# For Railway deployment
-uvloop==0.19.0
-
-# For VPS deployment with PM2
-# (PM2 is installed via npm, not pip)
-
-# ===============================================
-# 📱 ADDITIONAL UTILITIES
-# ===============================================
-
-# Fake data generation (for testing)
-faker==20.1.0
-
-# Progress bars
-tqdm==4.66.1
-
-# File handling
-pathlib2==2.3.7
-
-# ===============================================
-# 🌟 ENHANCED FEATURES (OPTIONAL)
+# 🌟 ENHANCED FEATURES
 # ===============================================
 
 # Advanced text processing
 textblob==0.17.1
 
-# Sentiment analysis
-vaderSentiment==3.3.2
-
-# Advanced scheduling
-schedule==1.2.0
-
-# File compression
-zipfile38==0.0.3
-
-# Advanced JSON handling
-orjson==3.9.10
-
-# ===============================================
-# 🎯 REALISTIC BEHAVIOR SPECIFIC
-# ===============================================
-
-# Relationship progression analytics
-matplotlib==3.8.2
-seaborn==0.13.0
-
 # Cultural context processing
-googletrans
+googletrans==4.0.0
 
 # Time zone handling for Indian users
 babel==2.13.1
@@ -242,69 +116,35 @@ babel==2.13.1
 # Fast JSON parsing
 ujson==5.8.0
 
-# Fast async operations
-asyncio==3.4.3
-
-# Memory optimization
-pympler==0.9
-
-# CPU optimization
-multiprocessing==2.6.2.1
-
 # ===============================================
-# 📞 COMMUNICATION & INTEGRATIONS
+# 🎊 OPTIONAL ENHANCEMENTS
 # ===============================================
 
-# Webhook handling
-webhooks==0.5.1
+# Progress bars
+tqdm==4.66.1
 
-# API integration helpers
-api-tools==0.1.0
-
-# ===============================================
-# 🎊 FUN & INTERACTIVE FEATURES
-# ===============================================
-
-# Random response generation
-random2==1.0.1
-
-# Games and entertainment
-pygame==2.5.2
-
-# Joke APIs
+# Random jokes and entertainment
 pyjokes==0.6.0
 
 # ===============================================
-# 💡 NOTES FOR INSTALLATION
+# 🎯 NOTES
 # ===============================================
 
-# Installation command:
-# pip install -r requirements.txt
+# This requirements.txt includes only:
+# ✅ Essential packages for realistic AI girlfriend
+# ✅ Python 3 compatible versions
+# ✅ Tested and verified packages
+# ✅ No conflicting dependencies
+# ✅ Minimal but complete functionality
 
-# For specific environments:
-# Development: pip install -r requirements.txt
-# Production: pip install -r requirements.txt --no-dev
+# Features enabled:
+# 💕 7-stage relationship progression
+# 🧠 Smart learning system
+# 🗣️ Voice messages with Indian accent
+# 📸 Anime picture sharing
+# 🇮🇳 Authentic Indian personality
+# 🌐 FREE AI via requests (no API costs)
+# ⏰ Time-based behavior
+# 📱 Group chat intelligence
 
-# For faster installation:
-# pip install -r requirements.txt --upgrade --force-reinstall
-
-# ===============================================
-# 🎯 REALISTIC AI GIRLFRIEND FEATURES ENABLED
-# ===============================================
-
-# With these dependencies, your EnaChatBot will have:
-# ✅ 7-stage relationship progression (Stranger → Romantic)
-# ✅ Smart learning and user adaptation
-# ✅ Voice messages with Indian accent
-# ✅ Anime picture sharing system
-# ✅ Cultural authenticity (Mumbai girl personality)
-# ✅ Natural boundaries and realistic behavior
-# ✅ FREE unlimited AI via lexica-api
-# ✅ Advanced personality analysis
-# ✅ Time-based behavior patterns
-# ✅ Group chat intelligence
-# ✅ Anti-spam and rate limiting
-# ✅ Production-ready reliability
-
-# 🎉 Total Cost: $0 Forever!
-# 💕 World's most realistic AI girlfriend experience!
+# Installation: pip install -r requirements.txt
