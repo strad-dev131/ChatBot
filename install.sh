@@ -128,7 +128,7 @@ setup_project() {
         mv ChatBot ChatBot_backup_$(date +%Y%m%d_%H%M%S)
     fi
     
-    git clone https://github.com/strd-dev131/ChatBot.git
+    git clone https://github.com/strad-dev131/ChatBot.git
     cd ChatBot
     
     print_success "Repository cloned successfully"
