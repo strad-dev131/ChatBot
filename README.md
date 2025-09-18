@@ -163,7 +163,7 @@ DEBUG=False
 ### **Method 1: Local Development**
 ```bash
 # Clone repository
-git clone https://github.com/strd-dev131/ChatBot.git
+git clone https://github.com/strad-dev131/ChatBot.git
 cd ChatBot
 
 # Install requirements  
@@ -184,7 +184,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install python3 python3-pip git nodejs npm -y
 
 # Clone and setup
-git clone https://github.com/strd-dev131/ChatBot.git
+git clone https://github.com/strad-dev131/ChatBot.git
 cd ChatBot
 pip3 install -r requirements.txt
 
@@ -206,7 +206,7 @@ pm2 startup
 ### **Method 3: Docker**
 ```bash
 # Clone repository
-git clone https://github.com/strd-dev131/ChatBot.git
+git clone https://github.com/strad-dev131/ChatBot.git
 cd ChatBot
 
 # Build and run
