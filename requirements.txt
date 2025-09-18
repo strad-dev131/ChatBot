@@ -210,7 +210,7 @@ pathlib2==2.3.7
 pywin32==306; sys_platform == "win32"
 
 # Linux compatibility  
-python-linux-procfs==0.7.3; sys_platform == "linux"
+python-linux-procfs; sys_platform == "linux"
 
 # macOS compatibility
 pyobjc==10.0; sys_platform == "darwin"
