@@ -1,31 +1,39 @@
 {
-  "name": "Perfect AI Girlfriend Bot - EnaChatBot",
-  "description": "🤖💕 Perfect AI-Powered Telegram ChatBot with Real Girl Personality - Features: Smart learning, sticker responses, content filtering, emotional intelligence, and 100% working AI models with advanced fallback systems",
+  "name": "EnaChatBot - Ultimate Realistic Indian AI Girl",
+  "description": "World's most realistic AI girlfriend with 7-stage relationship progression, smart learning, and authentic Indian personality. Features voice messages, cultural authenticity, and natural boundaries like a real person.",
   "keywords": [
     "telegram",
-    "bot", 
-    "chatbot",
+    "bot",
     "ai",
+    "chatbot",
+    "realistic",
+    "indian",
     "girlfriend",
-    "perfect",
+    "relationship",
+    "voice",
+    "hinglish",
+    "mumbai",
+    "personality",
     "learning",
-    "stickers",
-    "emotions",
-    "clone",
-    "openrouter",
-    "python",
-    "pyrogram",
-    "mongodb",
-    "girl",
-    "feminine",
-    "flirty",
-    "safe",
-    "content-filter"
+    "authentic",
+    "progressive"
   ],
-  "website": "https://github.com/strd-dev131/ChatBot",
   "repository": "https://github.com/strd-dev131/ChatBot",
-  "logo": "https://telegra.ph/file/f6d8e64246bddc26b4f66.jpg",
+  "website": "https://t.me/SID_ELITE",
+  "logo": "https://files.catbox.moe/5gwv0a.jpg",
   "success_url": "/",
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
   "env": {
     "API_ID": {
       "description": "Get this value from https://my.telegram.org",
@@ -33,88 +41,58 @@
       "required": true
     },
     "API_HASH": {
-      "description": "Get this value from https://my.telegram.org", 
+      "description": "Get this value from https://my.telegram.org",
       "value": "",
       "required": true
     },
     "BOT_TOKEN": {
-      "description": "Get bot token from @BotFather",
+      "description": "Get this value from @BotFather on Telegram",
       "value": "",
       "required": true
     },
     "MONGO_URL": {
-      "description": "MongoDB database URL. Get free from https://cloud.mongodb.com (Required for learning and memory)",
+      "description": "MongoDB Atlas connection string (FREE from https://cloud.mongodb.com)",
       "value": "",
       "required": true
     },
     "OWNER_ID": {
-      "description": "Your Telegram user ID. Get from @userinfobot",
+      "description": "Your Telegram user ID from @userinfobot",
       "value": "",
       "required": true
     },
     "OWNER_USERNAME": {
       "description": "Your Telegram username (without @)",
+      "value": "SID_ELITE",
+      "required": false
+    },
+    "STRING_SESSION": {
+      "description": "String session for userbot features (optional)",
       "value": "",
       "required": false
     },
-    "OPENROUTER_API_KEY": {
-      "description": "🚨 CRITICAL FOR PERFECT AI GIRLFRIEND! Get FREE API key from https://openrouter.ai/ - Enables unlimited smart conversations with real girl personality, learning, and emotional responses",
+    "STRING1": {
+      "description": "Additional string session 1 (optional)",
       "value": "",
-      "required": true
-    },
-    "AI_PERSONALITY": {
-      "description": "Choose AI personality: girlfriend (loving & romantic), flirty (playful & teasing), cute (innocent & sweet), sweet (caring & gentle)",
-      "value": "girlfriend",
       "required": false
     },
-    "OPENROUTER_MODEL": {
-      "description": "Primary AI model. ONLY WORKING MODELS: google/gemma-2-9b-it:free (recommended), meta-llama/llama-3.2-3b-instruct:free, qwen/qwen-2-7b-instruct:free",
-      "value": "google/gemma-2-9b-it:free",
+    "STRING2": {
+      "description": "Additional string session 2 (optional)",
+      "value": "",
       "required": false
     },
-    "ENABLE_AI_CHAT": {
-      "description": "Enable AI-powered girlfriend responses (True/False)",
-      "value": "True",
+    "STRING3": {
+      "description": "Additional string session 3 (optional)",
+      "value": "",
       "required": false
     },
-    "MAX_AI_TOKENS": {
-      "description": "Maximum tokens for AI responses (50-100). Lower = faster, Higher = more detailed",
-      "value": "80",
+    "STRING4": {
+      "description": "Additional string session 4 (optional)",
+      "value": "",
       "required": false
     },
-    "ENABLE_CONTENT_FILTER": {
-      "description": "Enable content filtering for safe, appropriate responses (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "ENABLE_LEARNING": {
-      "description": "Enable learning from conversations to get smarter (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "ENABLE_STICKERS": {
-      "description": "Enable sending cute girl stickers randomly (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "STICKER_CHANCE": {
-      "description": "Chance to send stickers instead of text (0-50). Recommended: 25",
-      "value": "25",
-      "required": false
-    },
-    "EMOJI_FREQUENCY": {
-      "description": "How many emojis to use: low, medium, high. Girls use lots of emojis!",
-      "value": "high",
-      "required": false
-    },
-    "PERSONALITY_EMOTIONS": {
-      "description": "Enable emotional intelligence and context awareness (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "CONVERSATION_MEMORY": {
-      "description": "Remember previous conversations for better context (True/False)",
-      "value": "True",
+    "STRING5": {
+      "description": "Additional string session 5 (optional)",
+      "value": "",
       "required": false
     },
     "SUPPORT_GRP": {
@@ -123,111 +101,147 @@
       "required": false
     },
     "UPDATE_CHNL": {
-      "description": "Update channel username (without @)", 
+      "description": "Update channel username (without @)",
       "value": "TeamXUpdate",
       "required": false
     },
-    "STRING_SESSION": {
-      "description": "Pyrogram string session for additional features (optional)",
+    "LOG_GROUP_ID": {
+      "description": "Log group ID for monitoring (optional)",
       "value": "",
       "required": false
     },
-    "LOG_GROUP_ID": {
-      "description": "Log group chat ID for bot logs (optional)",
-      "value": "",
+    "ENABLE_RELATIONSHIP_PROGRESSION": {
+      "description": "Enable 7-stage realistic relationship progression",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_SMART_LEARNING": {
+      "description": "Enable smart learning and user adaptation",
+      "value": "True",
+      "required": false
+    },
+    "NO_INSTANT_ROMANCE": {
+      "description": "Disable instant girlfriend behavior (realistic boundaries)",
+      "value": "True",
+      "required": false
+    },
+    "AUTHENTIC_INDIAN_BEHAVIOR": {
+      "description": "Enable authentic Indian girl personality",
+      "value": "True",
+      "required": false
+    },
+    "MUMBAI_LIFESTYLE_REFERENCES": {
+      "description": "Enable Mumbai lifestyle and cultural references",
+      "value": "True",
+      "required": false
+    },
+    "BOLLYWOOD_REFERENCES": {
+      "description": "Enable Bollywood and pop culture references",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_HINGLISH": {
+      "description": "Enable natural Hindi+English mix communication",
+      "value": "True",
+      "required": false
+    },
+    "PHOTOS_ONLY_FOR_FRIENDS": {
+      "description": "Only send photos to Level 3+ friends (realistic boundary)",
+      "value": "True",
+      "required": false
+    },
+    "VOICE_ONLY_FOR_CLOSE_FRIENDS": {
+      "description": "Only send voice messages to Level 4+ close friends",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_VOICE_MESSAGES": {
+      "description": "Enable voice message system with Indian accent",
+      "value": "True",
+      "required": false
+    },
+    "ENABLE_ANIME_PICS": {
+      "description": "Enable anime picture sharing system",
+      "value": "True",
+      "required": false
+    },
+    "AI_PERSONALITY": {
+      "description": "AI personality type (realistic_indian_girl recommended)",
+      "value": "realistic_indian_girl",
+      "required": false
+    },
+    "RELATIONSHIP_PROGRESSION_SPEED": {
+      "description": "Relationship progression speed (slow/normal/fast)",
+      "value": "normal",
+      "required": false
+    },
+    "MINIMUM_MESSAGES_FOR_FRIEND": {
+      "description": "Messages needed to become friend (Level 3)",
+      "value": "15",
+      "required": false
+    },
+    "MINIMUM_MESSAGES_FOR_ROMANTIC": {
+      "description": "Messages needed for romantic relationship (Level 7)",
+      "value": "120",
+      "required": false
+    },
+    "MAX_RESPONSE_LENGTH": {
+      "description": "Maximum response length in characters",
+      "value": "200",
       "required": false
     },
     "TIMEZONE": {
-      "description": "Bot timezone",
-      "value": "Asia/Kolkata", 
-      "required": false
-    },
-    "DEBUG": {
-      "description": "Enable debug mode for troubleshooting (True/False)",
-      "value": "False",
-      "required": false
-    },
-    "ENABLE_CLONE_FEATURE": {
-      "description": "Enable bot cloning feature (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "ENABLE_BROADCAST_FEATURE": {
-      "description": "Enable broadcast messaging (True/False)",
-      "value": "True", 
-      "required": false
-    },
-    "ENABLE_CHATBOT_FEATURE": {
-      "description": "Enable main chatbot functionality (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "ENABLE_LANGUAGE_DETECTION": {
-      "description": "Auto-detect user language and respond accordingly (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "ENABLE_AUTO_TRANSLATE": {
-      "description": "Auto-translate responses to user's language (True/False)",
-      "value": "True",
+      "description": "Timezone for time-based behavior",
+      "value": "Asia/Kolkata",
       "required": false
     },
     "DEFAULT_LANGUAGE": {
-      "description": "Default bot language (en, hi, es, fr, de, it, pt, ru, ja, ko, zh)",
-      "value": "en",
+      "description": "Default communication language",
+      "value": "hinglish",
       "required": false
     },
-    "RATE_LIMIT_MESSAGES": {
-      "description": "Rate limit: max messages per window (to prevent spam)",
-      "value": "25",
+    "CREATOR_NAME": {
+      "description": "Creator name (don't change)",
+      "value": "Siddhartha Abhimanyu",
       "required": false
     },
-    "RATE_LIMIT_WINDOW": {
-      "description": "Rate limit window in seconds",
-      "value": "60",
+    "CREATOR_USERNAME": {
+      "description": "Creator username (don't change)",
+      "value": "@SID_ELITE",
       "required": false
     },
-    "MAX_CLONES_PER_USER": {
-      "description": "Maximum clones per user",
-      "value": "5",
-      "required": false
-    },
-    "BROADCAST_DELAY": {
-      "description": "Delay between broadcast messages (seconds)",
-      "value": "0.1",
-      "required": false
-    },
-    "SAFE_MODE": {
-      "description": "Enable family-friendly safe mode (True/False)",
-      "value": "True",
-      "required": false
-    },
-    "AUTO_MODERATE": {
-      "description": "Automatically moderate inappropriate content (True/False)",
-      "value": "True",
+    "DEBUG": {
+      "description": "Enable debug mode for development",
+      "value": "False",
       "required": false
     }
   },
-  "formation": {
-    "worker": {
-      "quantity": 1,
-      "size": "basic"
-    }
-  },
-  "buildpacks": [
+  "addons": [
     {
-      "url": "heroku/python"
+      "plan": "heroku-redis:mini",
+      "options": {
+        "version": "7"
+      }
     }
   ],
-  "stack": "heroku-22",
   "scripts": {
-    "postdeploy": "python -c \"print('🎉 Perfect AI Girlfriend Bot deployed successfully! 💕 Your smart, learning, emotion-aware AI girlfriend is ready with stickers, content filtering, and real girl personality!')\"" 
+    "postdeploy": "echo 'EnaChatBot deployed successfully! 🎉 Your realistic AI girlfriend is ready!'"
   },
   "environments": {
-    "test": {
-      "scripts": {
-        "test": "python -m pytest"
-      }
+    "review": {
+      "addons": [
+        "heroku-redis:mini"
+      ]
+    },
+    "staging": {
+      "addons": [
+        "heroku-redis:mini"
+      ]
+    },
+    "production": {
+      "addons": [
+        "heroku-redis:premium-0"
+      ]
     }
   }
 }
