@@ -18,7 +18,7 @@ TgCrypto==1.2.5
 # ===============================================
 
 # FREE AI via lexica-api (No API costs!)
-lexica-api==1.0.1
+lexica-api
 
 # Natural Language Processing
 nltk==3.8.1
