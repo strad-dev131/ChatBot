@@ -230,7 +230,7 @@ matplotlib==3.8.2
 seaborn==0.13.0
 
 # Cultural context processing
-googletrans==4.0.0
+googletrans
 
 # Time zone handling for Indian users
 babel==2.13.1
