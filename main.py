@@ -31,23 +31,31 @@ def main():
         print("🤖 Starting EnaChatBot...")
         print("📱 Advanced AI-Powered Telegram ChatBot")
         print("🔧 Initializing modules and dependencies...")
-        
+
+        # Try to enable uvloop for better performance on small VPS
+        try:
+            import uvloop  # type: ignore
+            uvloop.install()
+            logging.info("✅ uvloop installed for high-performance event loop")
+        except Exception:
+            logging.info("ℹ️ uvloop not available, using default asyncio loop")
+
         # Import the main bot module
         from EnaChatBot.__main__ import anony_boot
-        
+
         # Run the bot
         asyncio.get_event_loop().run_until_complete(anony_boot())
-        
+
     except ImportError as e:
         print(f"❌ Import Error: {e}")
         print("💡 Make sure all dependencies are installed:")
         print("   pip install -r requirements.txt")
         sys.exit(1)
-        
+
     except KeyboardInterrupt:
         print("\n🛑 Bot stopped by user (Ctrl+C)")
         sys.exit(0)
-        
+
     except Exception as e:
         print(f"💥 Critical Error: {e}")
         logging.exception("Critical error in main function")

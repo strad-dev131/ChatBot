@@ -60,6 +60,14 @@ except ImportError:
     LEXICA_AVAILABLE = False
     logging.warning("⚠️ lexica-api not available, using fallback responses")
 
+# Optional HuggingFace local model via transformers
+try:
+    import transformers  # optional heavy dependency
+    from transformers import pipeline
+    HF_TRANSFORMERS_AVAILABLE = True
+except Exception:
+    HF_TRANSFORMERS_AVAILABLE = False
+
 # Optional DB persistence for relationships
 try:
     from EnaChatBot.database.relationships import get_user_state, save_user_state
@@ -647,6 +655,15 @@ class AdvancedContextualAI:
                 languageModels.mistral
             ]
             self.model_names = ["GPT", "Gemini", "Bard", "LLaMA", "Mistral"]
+
+        # Hugging Face fallback options (optional, optimized for small VPS by default off)
+        self.hf_local_enabled = bool(getattr(config, "ENABLE_HF_LOCAL", False) and getattr(config, "HUGGINGFACE_LOCAL_MODEL", "") and HF_TRANSFORMERS_AVAILABLE)
+        self.hf_inference_enabled = bool(getattr(config, "HUGGINGFACE_API_KEY", "") and (getattr(config, "HF_INFERENCE_MODEL", "") or getattr(config, "HUGGINGFACE_LOCAL_MODEL", "")))
+        self.hf_model_id = getattr(config, "HUGGINGFACE_LOCAL_MODEL", "")
+        self.hf_inference_model = getattr(config, "HF_INFERENCE_MODEL", "") or self.hf_model_id
+        self.hf_pipeline = None
+        self.hf_max_new_tokens = getattr(config, "HF_MAX_NEW_TOKENS", 128)
+        self.hf_temperature = getattr(config, "HF_TEMPERATURE", 0.7)
         
         # Realistic AI prompts based on relationship stage
         self.stage_prompts = {
@@ -740,6 +757,78 @@ class AdvancedContextualAI:
         except Exception as e:
             logger.warning(f"OpenRouter call failed: {e}")
             return None
+
+    async def try_hf_local(self, full_prompt_text: str) -> Optional[str]:
+        """Generate using a local HuggingFace model via transformers (optional)."""
+        if not self.hf_local_enabled:
+            return None
+        try:
+            if self.hf_pipeline is None:
+                # Lazy load to avoid startup overhead
+                try:
+                    self.hf_pipeline = pipeline("text-generation", model=self.hf_model_id, device_map="auto")
+                    logger.info(f"✅ Loaded local HF model: {self.hf_model_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to load local HF model: {e}")
+                    self.hf_local_enabled = False
+                    return None
+
+            def _gen():
+                return self.hf_pipeline(
+                    full_prompt_text,
+                    max_new_tokens=self.hf_max_new_tokens,
+                    do_sample=True,
+                    temperature=self.hf_temperature,
+                    top_p=0.9,
+                )
+
+            outputs = await asyncio.to_thread(_gen)
+            if not outputs:
+                return None
+            generated = outputs[0].get("generated_text", "")
+            # Remove the prompt part to get the continuation only
+            if generated.startswith(full_prompt_text):
+                generated = generated[len(full_prompt_text):]
+            return generated.strip()
+        except Exception as e:
+            logger.warning(f"HF local generation failed: {e}")
+            return None
+
+    async def try_hf_inference_api(self, full_prompt_text: str) -> Optional[str]:
+        """Generate using HuggingFace Inference API (optional)."""
+        if not self.hf_inference_enabled or not HTTPX_AVAILABLE:
+            return None
+        try:
+            headers = {
+                "Authorization": f"Bearer {config.HUGGINGFACE_API_KEY}",
+                "Content-Type": "application/json",
+            }
+            model = self.hf_inference_model
+            payload = {
+                "inputs": full_prompt_text,
+                "parameters": {
+                    "max_new_tokens": config.HF_MAX_NEW_TOKENS,
+                    "temperature": config.HF_TEMPERATURE,
+                    "top_p": 0.9,
+                    "return_full_text": False
+                }
+            }
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                r = await client.post(f"https://api-inference.huggingface.co/models/{model}", headers=headers, json=payload)
+                if r.status_code != 200:
+                    logger.warning(f"HuggingFace Inference API error {r.status_code}: {r.text[:200]}")
+                    return None
+                data = r.json()
+                # Possible response formats:
+                # [{"generated_text": "..."}]  OR {"error": "..."}
+                if isinstance(data, list) and data and "generated_text" in data[0]:
+                    return data[0]["generated_text"].strip()
+                if isinstance(data, dict) and "generated_text" in data:
+                    return data["generated_text"].strip()
+                return None
+        except Exception as e:
+            logger.warning(f"HF inference API failed: {e}")
+            return None
     
     def extract_content(self, response) -> str:
         """Extract content from lexica response"""
@@ -804,7 +893,7 @@ class AdvancedContextualAI:
                     Messages(content=f"{user_name} says: {user_message}", role="user"),
                 ]
 
-                # Preferred order: OpenRouter (if configured) -> Lexica -> fallback
+                # Preferred order: OpenRouter (if configured) -> Lexica -> HF local -> HF Inference -> fallback
                 if self.openrouter_enabled:
                     ai_response = await self.try_openrouter(or_messages)
 
@@ -813,6 +902,14 @@ class AdvancedContextualAI:
                         ai_response = await self.try_lexica_model(lex_messages, model, model_name)
                         if ai_response:
                             break
+
+                # Build a compact full prompt text for HF backends
+                full_prompt_text = f"{prompt}\\n\\n{relationship_context}\\n\\nUser says: {user_message}\\nEna:"
+                if not ai_response and self.hf_local_enabled:
+                    ai_response = await self.try_hf_local(full_prompt_text)
+
+                if not ai_response and self.hf_inference_enabled:
+                    ai_response = await self.try_hf_inference_api(full_prompt_text)
 
                 if ai_response:
                     # Clean up AI response
@@ -1204,18 +1301,16 @@ def get_ai_status() -> Dict[str, Any]:
         "lexica_available": LEXICA_AVAILABLE,
         "openrouter_enabled": realistic_ai.openrouter_enabled,
         "openrouter_model": realistic_ai.openrouter_model if realistic_ai.openrouter_enabled else "",
+        "huggingface_local": getattr(realistic_ai, "hf_local_enabled", False),
+        "huggingface_inference": getattr(realistic_ai, "hf_inference_enabled", False),
+        "huggingface_model_local": getattr(realistic_ai, "hf_model_id", "") if getattr(realistic_ai, "hf_local_enabled", False) else "",
+        "huggingface_model_inference": getattr(realistic_ai, "hf_inference_model", "") if getattr(realistic_ai, "hf_inference_enabled", False) else "",
         "voice_available": VOICE_AVAILABLE,
         "requests_available": REQUESTS_AVAILABLE,
         "ai_models": len(realistic_ai.models) if LEXICA_AVAILABLE else 0,
         "personality_loaded": True,
         "voice_scenarios": len(voice_generator.voice_scenarios),
-        "picture_apis": len(picture_manager.apis),
-        "relationship_system": "active",
-        "total_relationship_stages": 7,
-        "learning_system": "active",
-        "persistence": REL_DB_AVAILABLE
-    }
-
+        "picture_apis": len(picture_manager.ap
 # Cleanup function
 async def cleanup_ai():
     """Cleanup AI resources"""
