@@ -44,6 +44,8 @@ BOT_TOKEN = get_env_var("BOT_TOKEN", None, required=True)
 
 # Database Configuration (MongoDB Atlas - Free)
 MONGO_URL = get_env_var("MONGO_URL", None, required=True)
+# Optional: Multiple MongoDB URIs (comma-separated) for redundancy/replication
+MONGO_URLS = [u.strip() for u in get_env_var("MONGO_URLS", "").split(",") if u.strip()]
 
 # Owner Configuration (Your Telegram user ID from @userinfobot)
 OWNER_ID = int(get_env_var("OWNER_ID", None, required=True))
@@ -129,6 +131,11 @@ CREATOR_NAME = get_env_var("CREATOR_NAME", "Siddhartha Abhimanyu")
 CREATOR_USERNAME = get_env_var("CREATOR_USERNAME", "@SID_ELITE")
 CREATOR_TITLE = get_env_var("CREATOR_TITLE", "Tech Leader of Team X")
 CREATOR_COMPANY = get_env_var("CREATOR_COMPANY", "Team X Technologies")
+
+# Optional: OpenRouter.ai integration for premium LLMs
+OPENROUTER_API_KEY = get_env_var("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = get_env_var("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+OPENROUTER_BASE_URL = get_env_var("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
 # ===============================================
 # 🎭 ADVANCED PERSONALITY FEATURES
@@ -571,7 +578,10 @@ __all__ = [
     # Personality System
     "AI_PERSONALITY", "ENABLE_AI_CHAT", "ENABLE_HINGLISH", "INDIAN_ACCENT_VOICE",
     "AI_PERSONALITIES", "CURRENT_PERSONALITY", "RELATIONSHIP_LEVELS",
-    "PERSONALITY_TRAIT_DEFINITIONS", "PERSONALITY_TRAITS"
+    "PERSONALITY_TRAIT_DEFINITIONS", "PERSONALITY_TRAITS",
+    
+    # Multi-DB and OpenRouter
+    "MONGO_URLS", "OPENROUTER_API_KEY", "OPENROUTER_MODEL", "OPENROUTER_BASE_URL"
 ]
 
 # ===============================================

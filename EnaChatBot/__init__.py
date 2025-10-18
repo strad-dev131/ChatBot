@@ -161,12 +161,12 @@ def get_readable_time(seconds: int) -> str:
 EnaChatBot = EnaChatBot()
 
 # Fixed: Create userbot client properly
-if config.STRING1:
+if getattr(config, "STRING_SESSION", ""):
     userbot = Client(
         name="userbot",
         api_id=config.API_ID,
         api_hash=config.API_HASH,
-        session_string=config.STRING1,
+        session_string=config.STRING_SESSION,
         in_memory=True
     )
 else:
