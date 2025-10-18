@@ -137,6 +137,14 @@ OPENROUTER_API_KEY = get_env_var("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = get_env_var("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 OPENROUTER_BASE_URL = get_env_var("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
+# Optional: Hugging Face local/inference fallback
+ENABLE_HF_LOCAL = get_env_var("ENABLE_HF_LOCAL", "False").lower() == "true"
+HUGGINGFACE_LOCAL_MODEL = get_env_var("HUGGINGFACE_LOCAL_MODEL", "")
+HUGGINGFACE_API_KEY = get_env_var("HUGGINGFACE_API_KEY", "")
+HF_INFERENCE_MODEL = get_env_var("HF_INFERENCE_MODEL", "")
+HF_MAX_NEW_TOKENS = int(get_env_var("HF_MAX_NEW_TOKENS", "128"))
+HF_TEMPERATURE = float(get_env_var("HF_TEMPERATURE", "0.7"))
+
 # ===============================================
 # 🎭 ADVANCED PERSONALITY FEATURES
 # ===============================================
@@ -581,7 +589,11 @@ __all__ = [
     "PERSONALITY_TRAIT_DEFINITIONS", "PERSONALITY_TRAITS",
     
     # Multi-DB and OpenRouter
-    "MONGO_URLS", "OPENROUTER_API_KEY", "OPENROUTER_MODEL", "OPENROUTER_BASE_URL"
+    "MONGO_URLS", "OPENROUTER_API_KEY", "OPENROUTER_MODEL", "OPENROUTER_BASE_URL",
+    
+    # Hugging Face Fallback
+    "ENABLE_HF_LOCAL", "HUGGINGFACE_LOCAL_MODEL", "HUGGINGFACE_API_KEY",
+    "HF_INFERENCE_MODEL", "HF_MAX_NEW_TOKENS", "HF_TEMPERATURE"
 ]
 
 # ===============================================
