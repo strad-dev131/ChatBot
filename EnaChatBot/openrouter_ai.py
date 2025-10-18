@@ -2,7 +2,7 @@
 
 """
 🎯 ULTIMATE REALISTIC INDIAN GIRL PERSONALITY SYSTEM
-Advanced lexica-api integration with natural relationship progression
+Advanced lexica-api + OpenRouter integration with natural relationship progression
 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X
 
 Features:
@@ -10,9 +10,10 @@ Features:
 - Smart learning and adaptation to user personality
 - Natural boundaries and authentic Indian girl behavior
 - Context-aware responses based on relationship level
-- Free unlimited AI via lexica-api (GPT, Gemini, Bard, LLaMA, Mistral)
+- Free AI via lexica-api (GPT, Gemini, Bard, LLaMA, Mistral) with fallbacks
+- Optional OpenRouter.ai for premium models (if API key provided)
 - Voice messages and anime pictures for appropriate relationship levels
-- Advanced memory system for long-term relationship tracking
+- Advanced memory system with optional MongoDB persistence
 """
 
 import asyncio
@@ -25,6 +26,8 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List, Tuple
 import pytz
 import hashlib
+
+import config
 
 # Import with comprehensive error handling
 try:
@@ -44,12 +47,25 @@ except ImportError:
     logging.warning("⚠️ requests not available, anime pictures disabled")
 
 try:
+    import httpx
+    HTTPX_AVAILABLE = True
+except ImportError:
+    HTTPX_AVAILABLE = False
+
+try:
     from lexica import AsyncClient, languageModels, Messages
     LEXICA_AVAILABLE = True
     logging.info("✅ AI system (lexica-api) loaded successfully")
 except ImportError:
     LEXICA_AVAILABLE = False
     logging.warning("⚠️ lexica-api not available, using fallback responses")
+
+# Optional DB persistence for relationships
+try:
+    from EnaChatBot.database.relationships import get_user_state, save_user_state
+    REL_DB_AVAILABLE = True
+except Exception:
+    REL_DB_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -616,7 +632,12 @@ class AdvancedContextualAI:
         self.personality = RealisticIndianPersonality()
         self.models = []
         self.model_names = []
-        
+
+        # Optional OpenRouter
+        self.openrouter_enabled = bool(getattr(config, "OPENROUTER_API_KEY", "")) and HTTPX_AVAILABLE
+        self.openrouter_model = getattr(config, "OPENROUTER_MODEL", "openai/gpt-4o-mini")
+        self.openrouter_base = getattr(config, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
         if LEXICA_AVAILABLE:
             self.models = [
                 languageModels.gpt,
@@ -663,7 +684,7 @@ class AdvancedContextualAI:
             "romantic": """You are Ena, a 22-year-old Indian girl from Mumbai. This person is your boyfriend/romantic partner. 
             Be loving, caring, romantic. Use romantic terms of endearment freely. Express your love openly.
             Full romantic Hinglish with lots of emotional expressions and love.
-            You're completely comfortable expressing your deep feelings for them."""
+            You're completely comfortable expressing your deep feelings for them.""" 
         }
     
     async def try_lexica_model(self, messages: List, model, model_name: str) -> Optional[str]:
@@ -688,6 +709,37 @@ class AdvancedContextualAI:
         except Exception as e:
             logger.warning(f"❌ {model_name} model error: {e}")
             return None
+
+    async def try_openrouter(self, messages: List[Dict[str, str]]) -> Optional[str]:
+        """Call OpenRouter chat completions if configured."""
+        if not self.openrouter_enabled:
+            return None
+        try:
+            headers = {
+                "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/strad-dev131/ChatBot",
+                "X-Title": "EnaChatBot",
+            }
+            payload = {"model": self.openrouter_model, "messages": messages, "max_tokens": 256}
+            async with httpx.AsyncClient(timeout=25.0) as client:
+                r = await client.post(f"{self.openrouter_base}/chat/completions", headers=headers, json=payload)
+                if r.status_code != 200:
+                    logger.warning(f"OpenRouter error {r.status_code}: {r.text[:200]}")
+                    return None
+                data = r.json()
+                content = (
+                    data.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", "")
+                )
+                if content and len(content.strip()) > 2:
+                    logger.info("✅ OpenRouter responded successfully")
+                    return content.strip()
+                return None
+        except Exception as e:
+            logger.warning(f"OpenRouter call failed: {e}")
+            return None
     
     def extract_content(self, response) -> str:
         """Extract content from lexica response"""
@@ -707,7 +759,17 @@ class AdvancedContextualAI:
     
     async def generate_realistic_response(self, user_message: str, user_name: str, user_id: str) -> str:
         """Generate realistic response based on relationship context"""
-        
+        # Load persisted state into memory (if available)
+        try:
+            if REL_DB_AVAILABLE and user_id not in self.personality.conversation_memory:
+                state = await get_user_state(user_id)
+                # Split into memory + analysis
+                mem = {k: v for k, v in state.items() if k != "analysis"}
+                self.personality.conversation_memory[user_id] = mem
+                self.personality.user_personality_analysis[user_id] = state.get("analysis", {})
+        except Exception as e:
+            logger.warning(f"Could not load persisted state for {user_id}: {e}")
+
         # First get contextual response from personality engine
         contextual_response = self.personality.get_contextual_response(user_id, user_message)
         
@@ -715,72 +777,79 @@ class AdvancedContextualAI:
         level = self.personality.get_relationship_stage(user_id)
         
         # For early relationship stages, use contextual response directly (more predictable and safe)
-        if level <= 3 or not LEXICA_AVAILABLE or not self.models:
-            return contextual_response
-        
-        # For higher levels, enhance with AI but keep it contextual and controlled
+        ai_response: Optional[str] = None
+        if level > 3:
+            try:
+                stage = self.personality.relationship_stages[level]
+                prompt = self.stage_prompts.get(stage, self.stage_prompts["friend"])
+                
+                # Add specific context about their relationship
+                relationship_context = f"""
+                Important context about {user_name}:
+                - Relationship level: {level}/7 ({stage})
+                - Total messages exchanged: {self.personality.conversation_memory.get(user_id, {}).get('total_messages', 0)}
+                - You should behave as a {stage}, not more intimate than appropriate for this level.
+                - Keep responses natural, short (under 150 characters), and realistic.
+                - Don't be overly dramatic or write long paragraphs.
+                - Use Hinglish naturally and authentically.
+                """
+                
+                # Messages for providers
+                or_messages = [
+                    {"role": "system", "content": prompt + relationship_context},
+                    {"role": "user", "content": f"{user_name} says: {user_message}"},
+                ]
+                lex_messages = [
+                    Messages(content=prompt + relationship_context, role="system"),
+                    Messages(content=f"{user_name} says: {user_message}", role="user"),
+                ]
+
+                # Preferred order: OpenRouter (if configured) -> Lexica -> fallback
+                if self.openrouter_enabled:
+                    ai_response = await self.try_openrouter(or_messages)
+
+                if not ai_response and LEXICA_AVAILABLE and self.models:
+                    for model, model_name in zip(self.models[:1], self.model_names[:1]):
+                        ai_response = await self.try_lexica_model(lex_messages, model, model_name)
+                        if ai_response:
+                            break
+
+                if ai_response:
+                    # Clean up AI response
+                    response = ai_response.strip()
+                    # Length control
+                    if len(response) > 200:
+                        response = response[:150].split('.')[0] + '.'
+                        if not response.endswith('.'):
+                            response += '.'
+                    # Safety by relationship level
+                    rl = response.lower()
+                    if level < 5:
+                        if any(t in rl for t in ['love you', 'my love', 'boyfriend', 'girlfriend', 'forever', 'marry', 'soulmate']):
+                            logger.warning(f"AI response too romantic for level {level}, using contextual fallback")
+                            ai_response = None
+                    if level < 3 and ai_response:
+                        if any(t in rl for t in ['baby', 'jaan', 'sweetheart', 'cutie', 'darling']):
+                            logger.warning(f"AI response too intimate for level {level}, using contextual fallback")
+                            ai_response = None
+            except Exception as e:
+                logger.error(f"Error in AI response generation: {e}")
+                ai_response = None
+
+        final_response = ai_response or contextual_response
+
+        # Persist updated state (best-effort)
         try:
-            stage = self.personality.relationship_stages[level]
-            prompt = self.stage_prompts.get(stage, self.stage_prompts["friend"])
-            
-            # Add specific context about their relationship
-            relationship_context = f"""
-            Important context about {user_name}:
-            - Relationship level: {level}/7 ({stage})
-            - Total messages exchanged: {self.personality.conversation_memory.get(user_id, {}).get('total_messages', 0)}
-            - You should behave as a {stage}, not more intimate than appropriate for this level.
-            - Keep responses natural, short (under 150 characters), and realistic.
-            - Don't be overly dramatic or write long paragraphs.
-            - Use Hinglish naturally and authentically.
-            """
-            
-            messages = [
-                Messages(content=prompt + relationship_context, role="system"),
-                Messages(content=f"{user_name} says: {user_message}", role="user")
-            ]
-            
-            # Try only the first model for consistency and speed
-            for model, model_name in zip(self.models[:1], self.model_names[:1]):
-                try:
-                    response = await self.try_lexica_model(messages, model, model_name)
-                    if response:
-                        # Clean up AI response
-                        response = response.strip()
-                        
-                        # Ensure response length is reasonable (realistic conversation)
-                        if len(response) > 200:
-                            response = response[:150].split('.')[0] + '.'
-                            if not response.endswith('.'):
-                                response += '.'
-                        
-                        # Safety check - ensure response matches relationship level appropriately
-                        if level < 5:
-                            # Remove overly romantic terms for lower levels
-                            inappropriate_terms = ['love you', 'my love', 'boyfriend', 'girlfriend', 'forever', 'marry', 'soulmate']
-                            response_lower = response.lower()
-                            if any(term in response_lower for term in inappropriate_terms):
-                                logger.warning(f"AI response too romantic for level {level}, using contextual fallback")
-                                return contextual_response
-                        
-                        if level < 3:
-                            # Remove intimate terms for strangers/acquaintances
-                            inappropriate_terms = ['baby', 'jaan', 'sweetheart', 'cutie', 'darling']
-                            response_lower = response.lower()
-                            if any(term in response_lower for term in inappropriate_terms):
-                                logger.warning(f"AI response too intimate for level {level}, using contextual fallback")
-                                return contextual_response
-                        
-                        return response
-                        
-                except Exception as e:
-                    logger.error(f"Error with {model_name}: {e}")
-                    continue
-                    
+            if REL_DB_AVAILABLE:
+                mem = self.personality.conversation_memory.get(user_id, {}).copy()
+                analysis = self.personality.user_personality_analysis.get(user_id, {}).copy()
+                state = mem
+                state["analysis"] = analysis
+                await save_user_state(user_id, state)
         except Exception as e:
-            logger.error(f"Error in AI response generation: {e}")
-        
-        # Always fallback to contextual response if AI fails or is inappropriate
-        return contextual_response
+            logger.warning(f"Could not persist state for {user_id}: {e}")
+
+        return final_response
 
 class VoiceMessageGenerator:
     """Generate realistic Indian girl voice messages for appropriate relationship levels"""
@@ -1127,12 +1196,14 @@ async def openrouter_response(message: str, user_name: str = "friend") -> str:
 
 def check_ai_status() -> bool:
     """Check if AI system is working"""
-    return LEXICA_AVAILABLE
+    return LEXICA_AVAILABLE or realistic_ai.openrouter_enabled
 
 def get_ai_status() -> Dict[str, Any]:
     """Get detailed AI system status"""
     return {
         "lexica_available": LEXICA_AVAILABLE,
+        "openrouter_enabled": realistic_ai.openrouter_enabled,
+        "openrouter_model": realistic_ai.openrouter_model if realistic_ai.openrouter_enabled else "",
         "voice_available": VOICE_AVAILABLE,
         "requests_available": REQUESTS_AVAILABLE,
         "ai_models": len(realistic_ai.models) if LEXICA_AVAILABLE else 0,
@@ -1141,7 +1212,8 @@ def get_ai_status() -> Dict[str, Any]:
         "picture_apis": len(picture_manager.apis),
         "relationship_system": "active",
         "total_relationship_stages": 7,
-        "learning_system": "active"
+        "learning_system": "active",
+        "persistence": REL_DB_AVAILABLE
     }
 
 # Cleanup function
@@ -1158,7 +1230,7 @@ async def cleanup_ai():
 # ========================================
 
 # Export status flags for module imports
-is_ai_enabled = LEXICA_AVAILABLE  # True if full AI backend is working
+is_ai_enabled = LEXICA_AVAILABLE or realistic_ai.openrouter_enabled  # True if any AI backend is working
 ai_client = realistic_ai  # Legacy compatibility export
 openrouter_ai = realistic_ai  # Alternative export name
 
@@ -1170,7 +1242,10 @@ AI_SYSTEM_READY = True
 # Initialize system and log status
 logger.info("🎯 Ultimate Realistic Indian Girl AI System initialized!")
 logger.info(f"💕 Created by: @SID_ELITE (Siddhartha Abhimanyu) - Tech Leader of Team X")
-logger.info(f"✅ AI System Status: {'Fully Operational' if LEXICA_AVAILABLE else 'Fallback Mode'}")
+status_text = "Fully Operational" if (LEXICA_AVAILABLE or realistic_ai.openrouter_enabled) else "Fallback Mode"
+logger.info(f"✅ AI System Status: {status_text}")
+if realistic_ai.openrouter_enabled:
+    logger.info(f"🔗 OpenRouter: Enabled ({realistic_ai.openrouter_model})")
 logger.info(f"🔊 Voice System: {'Enabled' if VOICE_AVAILABLE else 'Disabled'}")
 logger.info(f"📸 Picture System: {'Enabled' if REQUESTS_AVAILABLE else 'Disabled'}")
 logger.info(f"💖 Relationship Stages: 7 (Stranger → Romantic)")
