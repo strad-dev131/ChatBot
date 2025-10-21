@@ -1,6 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from EnaChatBot import EnaChatBot as app, mongo, db
+from EnaChatBot import EnaChatBot as app
 import asyncio
 
 # FIXED: Import languages from helpers

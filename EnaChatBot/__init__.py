@@ -36,7 +36,8 @@ logging.basicConfig(
 )
 
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
-LOGGER = logging.getLogger(__name__)
+from EnaChatBot.utils.logger import get_logger
+LOGGER = get_logger(__name__)
 
 boot = time.time()
 mongodb = MongoCli(config.MONGO_URL)

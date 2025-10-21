@@ -1,9 +1,9 @@
 # EnaChatBot/mplugin/utils.py
 
 import asyncio
-import logging
+from EnaChatBot.utils.logger import get_logger
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 
 def get_user_id(message) -> int:
     """

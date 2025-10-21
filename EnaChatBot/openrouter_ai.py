@@ -75,7 +75,8 @@ try:
 except Exception:
     REL_DB_AVAILABLE = False
 
-logger = logging.getLogger(__name__)
+from EnaChatBot.utils.logger import get_logger
+logger = get_logger(__name__)
 
 # Indian Standard Time
 IST = pytz.timezone('Asia/Kolkata')
