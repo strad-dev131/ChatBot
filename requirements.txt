@@ -153,7 +153,5 @@ pyjokes==0.6.0
 # ===============================================
 # 🔧 ADDITIONAL RUNTIME DEPENDENCIES
 # ===============================================
-# Lexica client used by openrouter_ai.py
-lexica
 # System metrics used in Start.py
 psutil

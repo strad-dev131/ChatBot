@@ -47,12 +47,7 @@ _boot_ = time.time()
 
 clonedb = None
 
-def dbb():
-    global db
-    global clonedb
-    clonedb = {}
-    db = {}
-
+# Use proper MongoDB collections without overriding the database object
 cloneownerdb = db.clone_owners
 
 # -------------- CLONE OWNER FUNCTIONS -------------- #

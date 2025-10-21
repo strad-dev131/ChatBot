@@ -152,7 +152,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         chat_id = query.message.chat.id
         if lang_code in languages.values():
             await set_chat_language(chat_id, lang_code)
-            await query.answer, upsert=True)
             await query.answer(f"Your chat language has been set to {lang_code.title()}.", show_alert=True)
             await query.message.edit_text(f"Chat language has been set to {lang_code.title()}.")
         else:

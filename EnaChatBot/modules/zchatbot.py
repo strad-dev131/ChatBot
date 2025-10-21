@@ -34,6 +34,7 @@ except ImportError:
     DB_AVAILABLE = False
 
 from EnaChatBot import EnaChatBot, LOGGER
+from EnaChatBot.database.settings import is_chatbot_enabled
 
 # Import enhanced AI functionality with comprehensive error handling
 AI_AVAILABLE = False
@@ -266,10 +267,18 @@ async def realistic_indian_girlfriend_chatbot(client: Client, message: Message):
         # Basic validation
         if not message.from_user or not message.text:
             return
-        
+
         user_id = message.from_user.id
         chat_id = message.chat.id
         current_time = datetime.now()
+
+        # Respect per-chat chatbot enable/disable setting
+        try:
+            if not await is_chatbot_enabled(chat_id):
+                return
+        except Exception:
+            # If settings read fails, default to enabled
+            pass
         
         # Chat type detection
         is_private = message.chat.type == ChatType.PRIVATE
