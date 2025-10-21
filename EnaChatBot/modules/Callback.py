@@ -1,5 +1,4 @@
 import random
-from pymongo import MongoClient
 from pyrogram import Client, filters
 from pyrogram.errors import MessageEmpty
 from pyrogram.enums import ChatAction
@@ -7,13 +6,12 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from EnaChatBot.database.chats import add_served_chat
 from EnaChatBot.database.users import add_served_user
-from config import MONGO_URL
-from EnaChatBot import EnaChatBot, mongo
+from EnaChatBot import EnaChatBot
 from pyrogram.enums import ChatMemberStatus as CMS
 from pyrogram.types import CallbackQuery
 import asyncio
 import config
-from EnaChatBot import LOGGER, EnaChatBot, db
+from EnaChatBot import LOGGER, EnaChatBot
 
 # FIXED: Import languages and helpers from the helpers module
 from EnaChatBot.modules.helpers import (

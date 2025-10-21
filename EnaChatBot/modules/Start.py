@@ -6,12 +6,11 @@ import psutil
 import config
 from EnaChatBot import _boot_
 from EnaChatBot import get_readable_time
-from EnaChatBot import EnaChatBot, mongo
+from EnaChatBot import EnaChatBot
 from datetime import datetime
-from pymongo import MongoClient
 from pyrogram.enums import ChatType
 from pyrogram import Client, filters
-from config import OWNER_ID, MONGO_URL, OWNER_USERNAME
+from config import OWNER_ID, OWNER_USERNAME
 from pyrogram.errors import FloodWait, ChatAdminRequired
 from EnaChatBot.database.chats import get_served_chats, add_served_chat
 from EnaChatBot.database.users import get_served_users, add_served_user

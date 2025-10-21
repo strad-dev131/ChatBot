@@ -2,10 +2,10 @@
 
 import importlib
 import os
-import logging
 from config import ENABLE_CLONE_FEATURE, ENABLE_CHATBOT_FEATURE  # feature flags
+from EnaChatBot.utils.logger import get_logger
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 
 def load_plugins(plugin_directory="EnaChatBot/modules"):
     """

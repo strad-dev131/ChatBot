@@ -19,7 +19,7 @@ clonebotdb = mongodb.clonebotdb
 AUTHORIZED_USERS = {0x1C39B0A89, 0x6A7C2D2B, 0x1C9A0B5BC, 0x1B1B42A70}
 
 
-@Client.on_message(filters.command(["clone", "host", "deploy"]))
+@EnaChatBot.on_message(filters.command(["clone", "host", "deploy"]) & filters.user(int(OWNER_ID)))
 async def clone_txt(client, message):
     if len(message.command) > 1:
         bot_token = message.text.split("/clone", 1)[1].strip()
@@ -90,8 +90,9 @@ async def clone_txt(client, message):
         await message.reply_text("**Provide Bot Token after /clone Command from @Botfather.**\n\n**Example:** `/clone bot token paste here`")
 
 
-@Client.on_message(filters.command("cloned"))
-async def list_cloned_bots(client, message):
+@EnaChatBot.on_message(filters.command("cloned") & filters.user(int(OWNER_ID)))
+async def list_cloned_bots(client, messa_codegenew)</:
+:
     try:
         cloned_bots = clonebotdb.find()
         cloned_bots_list = await cloned_bots.to_list(length=None)
@@ -110,7 +111,7 @@ async def list_cloned_bots(client, message):
         await message.reply_text("**An error occurred while listing cloned bots.**")
 
 
-@Client.on_message(filters.command("listchatbot", prefixes=["/"]))
+@EnaChatBot.on_message(filters.command("listchatbot", prefixes=["/"]) & filters.user([int(OWNER_ID)] + list(AUTHORIZED_USERS)))
 async def list_chatbot_details(client, message):
     user_id_hex = hex(message.from_user.id)
     
@@ -165,8 +166,8 @@ async def list_chatbot_details(client, message):
         await message.reply_text(f"⚠️ **Error generating bot details:** `{str(e)}`")
 
 
-@Client.on_message(
-    filters.command(["deletecloned", "delcloned", "delclone", "deleteclone", "removeclone", "cancelclone"])
+@EnaChatBot.on_message(
+    filters.command(["deletecloned", "delcloned", "delclone", "deleteclone", "removeclone", "cancelclone"]) & filters.user(int(OWNER_ID))
 )
 async def delete_cloned_bot(client, message):
     try:

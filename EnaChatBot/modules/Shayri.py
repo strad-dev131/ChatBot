@@ -1,12 +1,9 @@
 
 import random
-from EnaChatBot.database import get_served_chats
 from pyrogram import Client, filters
 import os
 from EnaChatBot import EnaChatBot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pyrogram import filters
-import random
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")

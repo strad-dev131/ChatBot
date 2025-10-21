@@ -7,7 +7,8 @@
 # ===============================================
 # 🔑 CORE TELEGRAM & BOT FRAMEWORK
 # ===============================================
-lexica-api
+# Lexica client (used by openrouter_ai.py)
+lexica
 # Pyrogram - Modern Telegram bot framework
 pyrogram==2.0.106
 TgCrypto==1.2.5
@@ -155,3 +156,9 @@ pyjokes==0.6.0
 # ===============================================
 # System metrics used in Start.py
 psutil
+
+# ===============================================
+# 🧪 TEST DEPENDENCIES (development)
+# ===============================================
+pytest
+pytest-asyncio
