@@ -96,9 +96,8 @@ EXPOSE 8080
 # 💡 HEALTH CHECK
 # ===============================================
 
-# Health check to ensure bot is running
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)" || exit 1
+# No HTTP healthcheck because the bot runs as a long-lived worker process.
+# If you enable webhook mode, configure a proper health endpoint and add a healthcheck.
 
 # ===============================================
 # 🚀 STARTUP CONFIGURATION

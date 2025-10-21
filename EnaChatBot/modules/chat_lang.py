@@ -7,12 +7,8 @@ import asyncio
 from EnaChatBot.modules.helpers import chatai, CHATBOT_ON, languages
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
 
-lang_db = db.ChatLangDb.LangCollection
+from EnaChatBot.database.settings import get_chat_language
 message_cache = {}
-
-async def get_chat_language(chat_id):
-    chat_lang = await lang_db.find_one({"chat_id": chat_id})
-    return chat_lang["language"] if chat_lang and "language" in chat_lang else None
 
 # FIXED: Commented out the problematic auto language detection temporarily
 # This was causing issues with the MukeshAPI
