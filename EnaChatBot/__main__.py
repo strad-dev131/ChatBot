@@ -7,13 +7,13 @@ runtime with the Pyrogram-based modules in EnaChatBot/modules.
 """
 
 import asyncio
-import logging
 from typing import List
 
 from EnaChatBot import EnaChatBot as BotClient, LOGGER, load_clone_owners, userbot
 from EnaChatBot.mplugin.plugins import load_plugins
+from EnaChatBot.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 _loaded_plugins: List[str] = []
 

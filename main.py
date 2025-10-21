@@ -10,55 +10,47 @@ Repository: https://github.com/strd-dev131/ChatBot
 
 import sys
 import asyncio
-import logging
 from pathlib import Path
+from EnaChatBot.utils.logger import get_logger
 
 # Add the project root to the Python path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-# Configure basic logging
-logging.basicConfig(
-    format="[%(asctime)s - %(levelname)s] - %(name)s - %(message)s",
-    datefmt="%d-%b-%y %H:%M:%S",
-    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
-    level=logging.INFO,
-)
+logger = get_logger(__name__)
 
 def main():
     """Main entry point for the ChatBot application"""
     try:
-        print("🤖 Starting EnaChatBot...")
-        print("📱 Advanced AI-Powered Telegram ChatBot")
-        print("🔧 Initializing modules and dependencies...")
+        logger.info("Starting EnaChatBot...")
+        logger.info("Advanced AI-Powered Telegram ChatBot")
+        logger.info("Initializing modules and dependencies...")
 
         # Try to enable uvloop for better performance on small VPS
         try:
             import uvloop  # type: ignore
             uvloop.install()
-            logging.info("✅ uvloop installed for high-performance event loop")
+            logger.info("uvloop installed for high-performance event loop")
         except Exception:
-            logging.info("ℹ️ uvloop not available, using default asyncio loop")
+            logger.info("uvloop not available, using default asyncio loop")
 
         # Import the main bot module
         from EnaChatBot.__main__ import anony_boot
 
         # Run the bot
-        asyncio.get_event_loop().run_until_complete(anony_boot())
+        asyncio.run(anony_boot())
 
     except ImportError as e:
-        print(f"❌ Import Error: {e}")
-        print("💡 Make sure all dependencies are installed:")
-        print("   pip install -r requirements.txt")
+        logger.error(f"Import Error: {e}")
+        logger.info("Make sure all dependencies are installed: pip install -r requirements.txt")
         sys.exit(1)
 
     except KeyboardInterrupt:
-        print("\n🛑 Bot stopped by user (Ctrl+C)")
+        logger.info("Bot stopped by user (Ctrl+C)")
         sys.exit(0)
 
     except Exception as e:
-        print(f"💥 Critical Error: {e}")
-        logging.exception("Critical error in main function")
+        logger.error(f"Critical Error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

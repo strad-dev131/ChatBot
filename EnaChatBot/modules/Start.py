@@ -6,12 +6,11 @@ import psutil
 import config
 from EnaChatBot import _boot_
 from EnaChatBot import get_readable_time
-from EnaChatBot import EnaChatBot, mongo
+from EnaChatBot import EnaChatBot
 from datetime import datetime
-from pymongo import MongoClient
 from pyrogram.enums import ChatType
 from pyrogram import Client, filters
-from config import OWNER_ID, MONGO_URL, OWNER_USERNAME
+from config import OWNER_ID, OWNER_USERNAME
 from pyrogram.errors import FloodWait, ChatAdminRequired
 from EnaChatBot.database.chats import get_served_chats, add_served_chat
 from EnaChatBot.database.users import get_served_users, add_served_user
@@ -69,11 +68,7 @@ IMG = [
 
 
 
-from EnaChatBot import db
-
-chatai = db.Word.WordDb
-lang_db = db.ChatLangDb.LangCollection
-status_db = db.ChatBotStatusDb.StatusCollection
+from EnaChatBot.database.settings import enable_chatbot
 
 
 async def bot_sys_stats():
@@ -90,8 +85,7 @@ async def bot_sys_stats():
 
 async def set_default_status(chat_id):
     try:
-        if not await status_db.find_one({"chat_id": chat_id}):
-            await status_db.insert_one({"chat_id": chat_id, "status": "enabled"})
+        await enable_chatbot(chat_id)
     except Exception as e:
         print(f"Error setting default status for chat {chat_id}: {e}")
 
@@ -171,6 +165,17 @@ from pathlib import Path
 import os
 import time
 import io
+
+def humanbytes(size: int) -> str:
+    if not size:
+        return "0 B"
+    power = 1024
+    n = 0
+    units = ["B", "KB", "MB", "GB", "TB"]
+    while size >= power and n < len(units) - 1:
+        size /= power
+        n += 1
+    return f"{size:.2f} {units[n]}"
 
 @EnaChatBot.on_cmd(["ls"])
 async def ls(_, m: Message):

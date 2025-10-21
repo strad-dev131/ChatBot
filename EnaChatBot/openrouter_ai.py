@@ -75,7 +75,8 @@ try:
 except Exception:
     REL_DB_AVAILABLE = False
 
-logger = logging.getLogger(__name__)
+from EnaChatBot.utils.logger import get_logger
+logger = get_logger(__name__)
 
 # Indian Standard Time
 IST = pytz.timezone('Asia/Kolkata')
@@ -640,6 +641,8 @@ class AdvancedContextualAI:
         self.personality = RealisticIndianPersonality()
         self.models = []
         self.model_names = []
+        # Track current personality for external modules (e.g. Commands)
+        self.current_personality = getattr(config, "AI_PERSONALITY", "realistic_indian_girl")
 
         # Optional OpenRouter
         self.openrouter_enabled = bool(getattr(config, "OPENROUTER_API_KEY", "")) and HTTPX_AVAILABLE
@@ -1310,7 +1313,9 @@ def get_ai_status() -> Dict[str, Any]:
         "ai_models": len(realistic_ai.models) if LEXICA_AVAILABLE else 0,
         "personality_loaded": True,
         "voice_scenarios": len(voice_generator.voice_scenarios),
-        "picture_apis": len(picture_manager.ap
+        "picture_apis": len(picture_manager.apis),
+    }
+
 # Cleanup function
 async def cleanup_ai():
     """Cleanup AI resources"""

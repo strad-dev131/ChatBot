@@ -36,7 +36,8 @@ logging.basicConfig(
 )
 
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
-LOGGER = logging.getLogger(__name__)
+from EnaChatBot.utils.logger import get_logger
+LOGGER = get_logger(__name__)
 
 boot = time.time()
 mongodb = MongoCli(config.MONGO_URL)
@@ -47,12 +48,7 @@ _boot_ = time.time()
 
 clonedb = None
 
-def dbb():
-    global db
-    global clonedb
-    clonedb = {}
-    db = {}
-
+# Use proper MongoDB collections without overriding the database object
 cloneownerdb = db.clone_owners
 
 # -------------- CLONE OWNER FUNCTIONS -------------- #

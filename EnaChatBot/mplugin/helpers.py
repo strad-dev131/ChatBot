@@ -5,9 +5,9 @@ Helper functions for the mplugin system used by cloned bots
 
 from pyrogram import Client, filters
 from pyrogram.types import Message
-import logging
+from EnaChatBot.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def is_owner(user_id: int) -> bool:
     """

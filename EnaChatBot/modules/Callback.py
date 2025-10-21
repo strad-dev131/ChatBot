@@ -1,19 +1,17 @@
 import random
-from pymongo import MongoClient
 from pyrogram import Client, filters
 from pyrogram.errors import MessageEmpty
 from pyrogram.enums import ChatAction
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from deep_translator import GoogleTranslator
+
 from EnaChatBot.database.chats import add_served_chat
 from EnaChatBot.database.users import add_served_user
-from config import MONGO_URL
-from EnaChatBot import EnaChatBot, mongo
+from EnaChatBot import EnaChatBot
 from pyrogram.enums import ChatMemberStatus as CMS
 from pyrogram.types import CallbackQuery
 import asyncio
 import config
-from EnaChatBot import LOGGER, EnaChatBot, db
+from EnaChatBot import LOGGER, EnaChatBot
 
 # FIXED: Import languages and helpers from the helpers module
 from EnaChatBot.modules.helpers import (
@@ -33,8 +31,12 @@ from EnaChatBot.modules.helpers import (
     languages  # FIXED: Added languages import
 )
 
-lang_db = db.ChatLangDb.LangCollection
-status_db = db.chatbot_status_db.status
+from EnaChatBot.database.settings import (
+    set_chat_language,
+    reset_chat_language,
+    enable_chatbot,
+    disable_chatbot,
+)
 
 def generate_language_buttons(languages):
     buttons = []
@@ -127,7 +129,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     # Enable chatbot for the chat
     elif query.data == "enable_chatbot":
         chat_id = query.message.chat.id
-        status_db.update_one({"chat_id": chat_id}, {"$set": {"status": "enabled"}}, upsert=True)
+        await enable_chatbot(chat_id)
         await query.answer("Chatbot enabled ✅", show_alert=True)
         await query.edit_message_text(
             f"Chat: {query.message.chat.title}\n**Chatbot has been enabled.**"
@@ -136,7 +138,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     # Disable chatbot for the chat
     elif query.data == "disable_chatbot":
         chat_id = query.message.chat.id
-        status_db.update_one({"chat_id": chat_id}, {"$set": {"status": "disabled"}}, upsert=True)
+        await disable_chatbot(chat_id)
         await query.answer("Chatbot disabled!", show_alert=True)
         await query.edit_message_text(
             f"Chat: {query.message.chat.title}\n**Chatbot has been disabled.**"
@@ -147,7 +149,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         lang_code = query.data.split("_")[1]
         chat_id = query.message.chat.id
         if lang_code in languages.values():
-            lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": lang_code}}, upsert=True)
+            await set_chat_language(chat_id, lang_code)
             await query.answer(f"Your chat language has been set to {lang_code.title()}.", show_alert=True)
             await query.message.edit_text(f"Chat language has been set to {lang_code.title()}.")
         else:
@@ -156,7 +158,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     # Reset language selection to mix language
     elif query.data == "nolang":
         chat_id = query.message.chat.id
-        lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": "nolang"}}, upsert=True)
+        await reset_chat_language(chat_id)
         await query.answer("Bot language has been reset to mix language.", show_alert=True)
         await query.message.edit_text("**Bot language has been reset to mix language.**")
 

@@ -148,7 +148,7 @@ async def ai_status(client: Client, message: Message):
     if ai_enabled:
         status_text += f"**Personality:** `{config.AI_PERSONALITY.title()}`\n"
         status_text += f"**Model:** `{config.OPENROUTER_MODEL}`\n"
-        status_text += f"**Max Tokens:** `{config.MAX_AI_TOKENS}`\n"
+        status_text += f"**Max Tokens:** `256`\n"
         status_text += f"**API Provider:** OpenRouter\n\n"
         status_text += "**💕 AI girlfriend responses are active!**"
     else:
